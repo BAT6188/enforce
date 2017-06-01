@@ -20,4 +20,10 @@ class DemoController extends CommonController {
         $tree = $auth->format_deps('admin');
         $this->ajaxReturn($this->g2us($tree));
     }
+    public function test_area()
+    {
+        $auth = A($this->actions['auth']);
+        $tree = $auth->get_parent_dep(85);
+        $this->ajaxReturn($this->g2us($tree));
+    }
 }

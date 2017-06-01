@@ -119,86 +119,149 @@ class AuthController extends CommonController {
         $return = array();
         $userDb = D($this->models['user']);
         $empDb = D($this->models['employee']);
-        $username = $this->g2u(I('username'));
+        $username = $this->g2u($info['username']);
         $empInfo = $this->get_user_info($username);
         //核验管理区域
-        if(!in_array(I('areaid'), explode(',',$empInfo['deps']))){
+        if(!in_array($info['areaid'], explode(',',$empInfo['deps']))){
             $return['message'] = '抱歉，您无权向此部门添加警员，该部门实际并不在您的管理部门内！';
-            $this->ajaxReturn($return);
+            return $return;
         }
         //核验警员编号
-        $where['code'] = I('code');
+        $where['code'] = $info['code'];
         $c = $empDb->where($where)->count('id');
         if($c > 0){
             $return['message'] = '抱歉，该警员编号已经录入';
-            $this->ajaxReturn($return);
+            return $return;
         }
         $userInfo['fatherid'] = $empInfo['userid'];                 //          上级用户
-        //前端传入数据 I 方法内的参数
-        $empInfo['aredid'] = $userInfo['userarea'] = I('aredid');   //部门      管理部门
-        $empInfo['name'] = $userInfo['truename'] = I('name');       //姓名      真实姓名
-        $empInfo['code'] = $userInfo['username'] = I('code');       //警员编号  登录用户
-        $userInfo['userpassword'] = I('code');                      //          默认登录密码
-        $empInfo['sex'] = $userInfo['sex'] = I('sex');              //警员性别  用户性别
-        $empInfo['phone'] = $userInfo['mobile'] = I('phone');       //警员手机  用户手机
-        $empInfo['email'] = $userInfo['email'] = I('email');        //警员邮箱  用户邮箱
-        $empInfo['remark'] = I('remark');                           //警员备注
+        $empInfo['name'] = $userInfo['truename'] = $info['name'];       //姓名      真实姓名
+        $empInfo['code'] = $userInfo['username'] = $info['code'];       //警员编号  登录用户
+        $userInfo['userpassword'] = $info['code'];                      //          默认登录密码
+        $empInfo['sex'] = $userInfo['sex'] = $info['sex'];              //警员性别  用户性别
+        $empInfo['phone'] = $userInfo['mobile'] = $info['phone'];       //警员手机  用户手机
+        $empInfo['email'] = $userInfo['email'] = $info['email'];        //警员邮箱  用户邮箱
+        $empInfo['remark'] = $info['remark'];                           //警员备注
+        $empInfo['is_police'] = $info['is_police'];                     //是否是警员
+        $empInfo['is_adm'] = $info['is_adm'];                           //是否为管理者
+        $empInfo['aredid'] = $userInfo['userarea'] = $info['aredid'];   //部门      管理部门
+        //如果不是警员  或者是 adm 用户 自动添加当前部门的子部门
+        if($empInfo['is_police'] == 0 || $empInfo['is_adm'] == 1){
+            $deps = $this->get_children_dep((int)$empInfo['aredid']);
+            $deps[] = $empInfo['aredid'];
+            $userInfo['userarea'] = implode(',',$deps);
+        }
         //待处理上传图片   ！！！！！
-        $empInfo['photo_path'] = I('photo');                        //图片路径
+        $empInfo['photo_path'] = $info['photo'];                        //图片路径
 
         $result = $userDb->add($this->u2gs($userInfo));              //用户表添加
         $res = $empDb->add($this->u2gs($empInfo));                   //警员表添加
         if($result && $res){
-            $return['message'] = '添加警员成功,警员登录帐号密码均为警号,如需其他权限分配或现在请至权限管理';
+            $return['message'] = '添加警员成功,警员登录帐号密码均为警号,如需其他权限分配请至权限管理';
         }else{
             $return['message'] = '抱歉，添加警员失败。';
         }
-        $this->ajaxReturn($return);
+        return $return;
     }
     /**
      *添加部门
      */
-    public function add_dep()
+    public function add_dep($info)
     {
         $return = array();
         $empInfo = $this->get_user_info($username);
         //核验管理部门
-        if(!in_array(I('areaid'), explode(',',$empInfo['deps']))){
+        if(!in_array($info['areaid'], explode(',',$empInfo['deps']))){
             $return['message'] = '抱歉，您无权向此部门添加子部门，该部门实际并不在您的管理部门内！';
             $this->ajaxReturn($return);
         }
         $depInfo['proid'] = 1;
-        $depInfo['fatherareaid'] = I('areaid');                 //上级部门
-        $depInfo['areaname'] = I('areaname');                   //部门名字
-        $depInfo['areacode'] = I('areacode');                   //行政编号
-        $depInfo['rperson']  = I('rperson');                    //负责人
-        $depInfo['rphone']    = I('rphone');                     //电话
+        $depInfo['fatherareaid'] = $info['areaid'];                 //上级部门
+        $depInfo['areaname'] = $info['areaname'];                   //部门名字
+        $depInfo['areacode'] = $info['areacode'];                   //行政编号
+        $depInfo['rperson']  = $info['rperson'];                    //负责人
+        $depInfo['rphone']    = $info['rphone'];                     //电话
         $depModel = D($this->models['dep']);
         $depInfo = $this->u2gs($depInfo);
         $res = $depModel->add($depInfo);                        //添加
+        $result = array();
         if($res){
-
+            $emps = $this->get_dep_manager($info['areaid']);
+            $where['username'] = array('in',$emps);
+            $userDb = D($this->models['user']);
+            $users = $userDb->field('userid,userarea')->where($where)->select();
+            foreach ($users as $user) {
+                $user['userarea'] = $user['userarea'].','.$res;
+                $request['userid'] = $user['userid'];
+                unset($user['userid']);
+                $userDb->where($request)->save($user);
+            }
+            $result['message'] = '部门添加成功';
+        }else{
+            $result['message'] = '部门添加失败';
         }
+        return $result;
     }
     /**
-     * 获取所有的上级领导
-     * @param  string $username 用户名
-     * @return array
+     * 删除部门
+     * @return [type] [description]
      */
-    public function get_parent_emp($username)
+    public function del_dep($deps)
     {
-        $request['code'] = $username;
+        
+    }
+    /**
+     * 获取部门的管理员
+     * @param  int $depid 部门id
+     * @return array        修要修改的管理员
+     */
+    public function get_dep_manager($depid)
+    {
         $empDb = D($this->models['employee']);
-        $fun = A($this->actions['function']);
-        $date = $fun->getParentData();
+        $deps = $this->get_parent_dep($depid);      //获取所有的父部门
+        $deps[] = $depid;
+        $where['areaid'] = array('in',$deps);      //归属区域
+        $where['is_police'] = 0;        //非警员 
+        $emps = $empDb->where($where)->getFiled('code',true);  //获取所有的管理员
+        return $emps;
     }
     /**
-     * 获取所有的下级下属
-     * @param  string $username 用户名
+     * 获取所有子部门
+     * @param  int $depid 部门ID
      * @return array
      */
-    public function get_children_emp($username)
+    public function get_children_dep($depid)
     {
-        $request['code'] = $username;
+        $l_arr = array('areaid','fatherareaid');
+        $depModel = D($this->models['dep']);
+        $where[$l_arr[0]] = $depid;
+        $depInfo = $depModel->where($where)->select();
+        $fun = A($this->actions['function']);
+        
+        $childrenDeps = $fun->getChData($depInfo,$this->models['dep'],$l_arr);
+        $res = array();
+        foreach ($childrenDeps as  $dep) {
+            $res[] = $dep[$l_arr[0]];
+        }
+        return $res;
+    }
+    /**
+     * 获取所有上级部门
+     * @param  int $depid 部门ID
+     * @return array
+     */
+    public function get_parent_dep($depid)
+    {
+        $l_arr = array('areaid','fatherareaid');
+        $depModel = D($this->models['dep']);
+        $where[$l_arr[0]] = $depid;
+        $depInfo = $depModel->where($where)->select();
+        $fun = A($this->actions['function']);
+        
+        $childrenDeps = $fun->getParentData($depInfo,$this->models['dep'],$l_arr);
+        $res = array();
+        foreach ($childrenDeps as  $dep) {
+            $res[] = $dep[$l_arr[0]];
+        }
+        return $res;
     }
 }

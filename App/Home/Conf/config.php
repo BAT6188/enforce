@@ -6,7 +6,7 @@ return array(
     'URL_CASE_INSENSITIVE'=>false, //URL访问不再区分大小写
     //连接数据库
     'DB_TYPE'   => 'mysql', // 设置数据库类型
-    'DB_HOST'   => '192.168.0.249', // 设置主机 192.168.0.241
+    'DB_HOST'   => 'localhost', // 设置主机 192.168.0.241
     'DB_NAME'   => 'enforce', // 设置数据库
     'DB_USER'   => 'root', // 设置用户名
     'DB_PWD'    => '123456', // 设置密码
