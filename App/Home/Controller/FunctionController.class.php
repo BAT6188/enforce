@@ -186,4 +186,36 @@ class FunctionController extends CommonController {
         }
         return  $easyuiTree;
     }
+    /**
+     * 单张图片下载
+     * @param string $imgUrl  图片地址(服务器地址，http地址)
+     * @return 输出图片
+     */
+    public function downImage()
+    {
+        $imgUrl = I('imgUrl');
+        //判断图片地址是否带有http地址，有的话下载后传图片
+        $index = strstr($imgUrl, 'http');
+        $img = basename($imgUrl);
+        if($index){
+            $tempPath = './Public/download/Temp/'.date('Ymd').'/';
+            if(!file_exists($tempPath)){
+                mkdir($tempPath);
+            }
+            $content = file_get_contents($imgUrl);
+            file_put_contents($tempPath.$img, $content);
+            $imgUrl = $tempPath.$img;
+        }
+        if($imgUrl != ''){
+            header ( "Cache-Control: max-age=0" );
+            header ( "Content-Description: File Transfer" );
+            header ( 'Content-disposition: attachment; filename=' . basename ( $imgUrl ) ); // 文件名
+            #header ( "Content-Type: application/zip" ); // zip格式的
+            #header ( "Content-Transfer-Encoding: binary" ); // 告诉浏览器，这是二进制文件
+            header ( 'Content-Length: ' . filesize ( $imgUrl ) ); // 告诉浏览器，文件大小
+            readfile ( $imgUrl );//输出文件;
+        }else{
+            exit('没有图片下载，或者服务器获取图片失败！');
+        }
+    }
 }

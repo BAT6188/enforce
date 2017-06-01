@@ -189,11 +189,11 @@ App.prototype.listenKey = function(key){
 }
 /**
  * 是否在数组中
- * @param  string $searh 比较的字符串
+ * @param  string $search 比较的字符串
  * @param  array $arr   比较的数组
  * @return boolean
  */
-App.prototype.inArray(searh,arr){
+App.prototype.inArray(search,arr){
     for (var i = 0; i < arr.length; i++) {
         if(arr[i] == search) return true;
     }
