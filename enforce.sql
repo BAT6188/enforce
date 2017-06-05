@@ -1,22 +1,22 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : 192.168.0.249
-Source Server Version : 50541
-Source Host           : 192.168.0.249:3306
+Source Server         : localhost
+Source Server Version : 50547
+Source Host           : localhost:3306
 Source Database       : enforce
 
 Target Server Type    : MYSQL
-Target Server Version : 50541
+Target Server Version : 50547
 File Encoding         : 936
 
-Date: 2017-06-01 17:18:16
+Date: 2017-06-06 07:40:47
 */
 
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
--- Table structure for `area_dep`
+-- Table structure for area_dep
 -- ----------------------------
 DROP TABLE IF EXISTS `area_dep`;
 CREATE TABLE `area_dep` (
@@ -73,7 +73,7 @@ INSERT INTO `area_dep` VALUES ('89', '1', '74', '石拐事故中队', '00005128', '', 
 INSERT INTO `area_dep` VALUES ('90', '1', '74', '石拐督察法制办', '00006128', '', '');
 
 -- ----------------------------
--- Table structure for `area_pro`
+-- Table structure for area_pro
 -- ----------------------------
 DROP TABLE IF EXISTS `area_pro`;
 CREATE TABLE `area_pro` (
@@ -88,7 +88,7 @@ CREATE TABLE `area_pro` (
 INSERT INTO `area_pro` VALUES ('1', '部门');
 
 -- ----------------------------
--- Table structure for `employee`
+-- Table structure for employee
 -- ----------------------------
 DROP TABLE IF EXISTS `employee`;
 CREATE TABLE `employee` (
@@ -99,11 +99,13 @@ CREATE TABLE `employee` (
   `sex` char(4) DEFAULT '男',
   `phone` varchar(32) DEFAULT NULL,
   `email` varchar(32) DEFAULT NULL,
-  `libnum` varchar(16) DEFAULT '-1',
   `remark` varchar(200) DEFAULT NULL,
   `photo_path` varchar(128) DEFAULT NULL COMMENT '警员相片绝对位置(URL)',
-  `is_police` int(2) NOT NULL DEFAULT '1' COMMENT '0:非警员，1：警员',
-  `is_adm` int(2) NOT NULL DEFAULT '0' COMMENT '0:非，1：是管理员',
+  `password` varchar(32) NOT NULL COMMENT '登陆密码',
+  `roleid` int(11) NOT NULL DEFAULT '1',
+  `bindingip` int(11) NOT NULL DEFAULT '0' COMMENT '0:未梆定,1:梆定',
+  `clientip` varchar(16) DEFAULT NULL,
+  `userarea` text COMMENT '管理员是非空.用户有权限的区域ID集合，逗号分隔',
   PRIMARY KEY (`empid`),
   UNIQUE KEY `idx_code` (`code`) USING BTREE
 ) ENGINE=MyISAM AUTO_INCREMENT=32 DEFAULT CHARSET=latin1;
@@ -111,30 +113,29 @@ CREATE TABLE `employee` (
 -- ----------------------------
 -- Records of employee
 -- ----------------------------
-INSERT INTO `employee` VALUES ('11', '88', '王二', '000113', '男', '12345678901', '', '-1', '民警', null, '1', '0');
-INSERT INTO `employee` VALUES ('10', '88', '王一', '000112', '男', '12345678902', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('9', '88', '张晓明', '000111', '男', '12345678903', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('16', '88', '王六', '000117', '男', '12345678907', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('13', '88', '王三', '000114', '男', '12345678904', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('14', '88', '王四', '000115', '男', '12345678905', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('15', '88', '王五', '000116', '男', '12345678906', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('17', '88', '王七', '000118', '男', '12345678908', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('18', '88', '王强', '000119', '男', '12345678909', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('19', '88', '王九', '000120', '男', '12345678910', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('20', '88', '李一', '000121', '男', '12345678911', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('21', '88', '李二', '000122', '男', '12345678912', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('22', '88', '李三', '000123', '男', '12345678913', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('23', '88', '李四', '000124', '男', '12345678914', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('24', '88', '李五', '000125', '男', '12345678915', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('25', '88', '李六', '000126', '男', '12345678916', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('26', '88', '李七', '000127', '男', '12345678917', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('27', '88', '文刚', '000128', '男', '12345678918', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('28', '88', '文里', '000129', '男', '12345678919', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('29', '74', '警员', '123456', '男', '123456789030', '', '-1', '', null, '1', '0');
-INSERT INTO `employee` VALUES ('31', '54', '盾华', 'admin', '男', '', '', '-1', '', null, '0', '1');
+INSERT INTO `employee` VALUES ('11', '88', '王二', '000113', '男', '12345678901', '', '民警', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('10', '88', '王一', '000112', '男', '12345678902', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('9', '88', '张晓明', '000111', '男', '12345678903', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('16', '88', '王六', '000117', '男', '12345678907', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('13', '88', '王三', '000114', '男', '12345678904', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('14', '88', '王四', '000115', '男', '12345678905', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('15', '88', '王五', '000116', '男', '12345678906', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('17', '88', '王七', '000118', '男', '12345678908', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('18', '88', '王强', '000119', '男', '12345678909', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('19', '88', '王九', '000120', '男', '12345678910', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('20', '88', '李一', '000121', '男', '12345678911', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('21', '88', '李二', '000122', '男', '12345678912', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('22', '88', '李三', '000123', '男', '12345678913', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('23', '88', '李四', '000124', '男', '12345678914', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('24', '88', '李五', '000125', '男', '12345678915', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('25', '88', '李六', '000126', '男', '12345678916', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('26', '88', '李七', '000127', '男', '12345678917', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('27', '88', '文刚', '000128', '男', '12345678918', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('28', '88', '文里', '000129', '男', '12345678919', '', '', null, '', '1', '0', null, null);
+INSERT INTO `employee` VALUES ('29', '74', '警员', '123456', '男', '123456789030', '', '', null, '', '1', '0', null, null);
 
 -- ----------------------------
--- Table structure for `menu`
+-- Table structure for menu
 -- ----------------------------
 DROP TABLE IF EXISTS `menu`;
 CREATE TABLE `menu` (
@@ -181,7 +182,7 @@ INSERT INTO `menu` VALUES ('407', '400', '分类统计', null, '7', null, '1');
 INSERT INTO `menu` VALUES ('408', '400', '拍摄统计', null, '0', null, '1');
 
 -- ----------------------------
--- Table structure for `pe_base`
+-- Table structure for pe_base
 -- ----------------------------
 DROP TABLE IF EXISTS `pe_base`;
 CREATE TABLE `pe_base` (
@@ -197,7 +198,7 @@ CREATE TABLE `pe_base` (
 INSERT INTO `pe_base` VALUES ('1111111', '123456', null);
 
 -- ----------------------------
--- Table structure for `pe_log_list`
+-- Table structure for pe_log_list
 -- ----------------------------
 DROP TABLE IF EXISTS `pe_log_list`;
 CREATE TABLE `pe_log_list` (
@@ -217,7 +218,7 @@ CREATE TABLE `pe_log_list` (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for `pe_video_list`
+-- Table structure for pe_video_list
 -- ----------------------------
 DROP TABLE IF EXISTS `pe_video_list`;
 CREATE TABLE `pe_video_list` (
@@ -252,7 +253,7 @@ CREATE TABLE `pe_video_list` (
 INSERT INTO `pe_video_list` VALUES ('1111111@201506250850560000', '吴晓@201506250850560000.mp4', '2015-06-25 08:50:56', '6.5', '1', null, '123456', null, null, '1111111', '192.168.0.249', null, 'http://192.168.0.249/pe_data/1111111/20160523/mp4/1111111@201506250850560000.mp4', null, '2017-05-24 17:44:11', null, '12345', '192.168.0.222', null, '0', null);
 
 -- ----------------------------
--- Table structure for `role`
+-- Table structure for role
 -- ----------------------------
 DROP TABLE IF EXISTS `role`;
 CREATE TABLE `role` (
@@ -272,7 +273,7 @@ INSERT INTO `role` VALUES ('2', '普通用户', '拥有基本的操作权限', '500,503,502,5
 INSERT INTO `role` VALUES ('4', '设备用户', '拥有用户对设备管理的权限', '500,503,502,501,303,301,202,100,103,102,101', '2');
 
 -- ----------------------------
--- Table structure for `sys_log`
+-- Table structure for sys_log
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_log`;
 CREATE TABLE `sys_log` (
@@ -289,13 +290,13 @@ CREATE TABLE `sys_log` (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for `user`
+-- Table structure for user
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `userid` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(32) NOT NULL COMMENT '登陆账号,与employee.code相同',
-  `userpassword` varchar(32) NOT NULL DEFAULT '123456',
+  `password` varchar(32) NOT NULL DEFAULT '123456',
   `roleid` int(11) DEFAULT '1',
   `bindingip` int(11) DEFAULT '0',
   `clientip` varchar(16) DEFAULT NULL,
@@ -316,9 +317,10 @@ CREATE TABLE `user` (
 -- ----------------------------
 INSERT INTO `user` VALUES ('1', 'admin', '123456', '1', '0', '', '张三', '男', '', '', '', '0', '2017-05-22 13:10:12', '53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,78,79,80,81,82,83,84,85,86,87,88,89,90');
 INSERT INTO `user` VALUES ('2', 'face', 'face', '2', '0', '', '', '男', '', '', '', '1', '2016-11-30 16:45:27', '');
+INSERT INTO `user` VALUES ('3', 'test', 'test', '4', '0', '', '', '男', '', '', '', '2', '2016-11-23 17:27:08', '');
 
 -- ----------------------------
--- Table structure for `ws_base`
+-- Table structure for ws_base
 -- ----------------------------
 DROP TABLE IF EXISTS `ws_base`;
 CREATE TABLE `ws_base` (
@@ -340,7 +342,7 @@ CREATE TABLE `ws_base` (
 INSERT INTO `ws_base` VALUES ('12345', '192.168.0.222', '派出所', null, null, '1', '2017-05-24 17:52:12', '1', null);
 
 -- ----------------------------
--- Table structure for `ws_log`
+-- Table structure for ws_log
 -- ----------------------------
 DROP TABLE IF EXISTS `ws_log`;
 CREATE TABLE `ws_log` (
@@ -356,3 +358,4 @@ CREATE TABLE `ws_log` (
 -- ----------------------------
 -- Records of ws_log
 -- ----------------------------
+SET FOREIGN_KEY_CHECKS=1;
