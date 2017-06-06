@@ -9,13 +9,14 @@ class CommonController extends Controller {
 	 * 格式化easyui-tree数据格式
 	 * @param  array $ids   父级菜单id
 	 * @param  array $datas 修要处理的菜单
-	 * @param  array $l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr
+	 * @param  array $l_arr 保存菜单的一些信息  0-自身id  1-保存内容 2-父ID 3-排序
 	 * @param  array $L_attributes 额外需要保存的信息
      * @param  array $check_arr 需要被勾选的数组
      * @param  array $icons 需要添加的图标 icon-remove 0-父图标 1-子图标
+     * @param  array $noclose  无需折叠的数组
 	 * @return array
 	 */
-    public function formatTree($ids,$datas,$l_arr,$L_attributes,$check_arr,$icons)
+    public function formatTree($ids,$datas,$l_arr,$L_attributes,$check_arr,$icons,$noclose)
     {
     	$formatTree = array();
         foreach ($ids as $id) {
@@ -27,23 +28,29 @@ class CommonController extends Controller {
                     $doTree['id'] = $data[$l_arr[0]];
                     if(!empty($check_arr)){
                         if(in_array($doTree['id'],$check_arr)){
-                            $doTree['checked'] = true;
+                                $doTree['checked'] = true;
                         }
                     }
                     $doTree['text'] = $data[$l_arr[1]];
                     foreach ($L_attributes as $L_attribute) {
                     	$doTree[$L_attribute] = $data[$L_attribute];
                     }
+                    //删除已经符合条件的数据减少下一次循环的次数
+                    unset($datas[$key]);
                     $children = $this->formatTree($nextIds,$datas,$l_arr,$L_attributes,$check_arr,$icons);
                     $nextIds = '';
                     if(!empty($children)){
-                        $doTree['state'] = 'closed';
+                        if(!empty($noclose)){
+                            if(!in_array($doTree['id'],$noclose)) $doTree['state'] = 'closed';
+                        }else{
+                            $doTree['state'] = 'closed';
+                        }
                         $doTree['children'] = $children;
-                        $doTree['iconCls'] = $icons[0];
+                        !empty($icons) ? $doTree['iconCls'] = $icons[0] : '';
                     }else{
-                        $doTree['iconCls'] = $icons[1];
+                        !empty($icons) ? $doTree['iconCls'] = $icons[1] : '';
                     }
-                    $formatTree[]=$doTree;
+                    $formatTree[] = $doTree;
                     //对于生成的菜单在进行排序
                     array_multisort($odrData,SORT_DESC,$formatTree);
                     $doTree = '';

@@ -1,7 +1,7 @@
 <?php
 namespace Home\Controller;
 
-class MenuController extends CommonController 
+class MenuController extends CommonController
 {
     protected $models = ['menu'=>'Enforce\Menu'];
 
@@ -11,7 +11,7 @@ class MenuController extends CommonController
         $ids = array(0);
         $menuData = $this->formatMenu($ids,$data);
         $this->ajaxReturn($menuData);*/
-        $this->ajaxReturn($this->getFunList());
+        $this->ajaxReturn(g2us($this->getFunList()));
     }
 
     /**
@@ -23,12 +23,11 @@ class MenuController extends CommonController
         $ids = array(0);
         $db = D($this->models['menu']);
         $menuData= session('menu');
-       
-        $where['funid'] = array('in',explode(',', $menuData));
-        $data = $db->where($where)->order('ordernum desc')->select();      
+
+        $where['id'] = array('in',explode(',', $menuData));
+        $data = $db->where($where)->order('ordernum desc')->select();
         $datac = $this->getParentMenu($data);
         $data = array_merge($data,$datac);
-        
         $menu = $this->formatMenu($ids,$data);
         return $menu;
     }
@@ -48,37 +47,38 @@ class MenuController extends CommonController
         $formatMenu = array();
         foreach ($ids as $id) {
             $odrMenu = array();
-            foreach ($menus as $menu) {                
-                if($id == $menu['prefunid']){                    
+            foreach ($menus as $key=>$menu) {
+                if($id == $menu['pid']){
                     $odrMenu[] = $menu['ordernum'];
                     $doMenu['ordernum'] = $menu['ordernum'];
-                    $nextIds[] = $menu['funid'];
-                    $doMenu['id'] = $menu['funid'];
-                    $doMenu['text'] = $menu['funname'];
+                    $nextIds[] = $menu['id'];
+                    $doMenu['id'] = $menu['id'];
+                    $doMenu['text'] = $menu['name'];
                     $doMenu['iconCls'] = $menu['iconcls'];
                     if($menu['url']){
                         //判断是否为批处理文件 如果有的话 原样输出菜单  否则U方法输出菜单
                         if(strstr($menu['url'], '.bat')){
                             $attributes['url'] = $menu['url'];
-                        }else{                            
-                            $attributes['url'] = U($menu['url']);                           
+                        }else{
+                            $attributes['url'] = U($menu['url']);
                         }
-                        $doMenu['attributes'] = $attributes;                        
+                        $doMenu['attributes'] = $attributes;
                     }
+                    //删除已经符合条件的数据减少下一次循环的次数
+                    unset($menus[$key]);
                     $children = $this->formatMenu($nextIds,$menus);
                     $nextIds = '';
                     if(!empty($children)){
                         $doMenu['state'] = 'closed';
                         $doMenu['children'] = $children;
-                    }        
+                    }
                     $formatMenu[]=$doMenu;
                     //对于生成的菜单在进行排序
                     array_multisort($odrMenu,SORT_DESC,$formatMenu);
-                    $doMenu = '';
-                }             
-            } 
-        }        
-        //$formatMenu = json_encode($formatMenu);  
+                    $doMenu = array();
+                }
+            }
+        }
         return  $formatMenu;
     }
     /**
@@ -96,20 +96,20 @@ class MenuController extends CommonController
             $pids[] = $value['funid'];
         }
         foreach ($menus as $menu) {
-            if(!in_array($menu['prefunid'],$pids)){                
+            if(!in_array($menu['prefunid'],$pids)){
                 $menuDb = D($this->models['menu']);;
                 $where['funid'] = $menu['prefunid'];
-                $data = $menuDb->where($where)->find();              
-                if($data!=''  && !in_array($data['funid'],$pids)){                    
+                $data = $menuDb->where($where)->find();
+                if($data!=''  && !in_array($data['funid'],$pids)){
                     $datas[] = $data;
                 }
-                $pids[] = $menu['prefunid'];  
-            }                    
-        }        
+                $pids[] = $menu['prefunid'];
+            }
+        }
         $datac = $this->getParentMenu($datas);
         if($datac){
             $datas = array_merge($datas,$datac);
-        }        
+        }
         return $datas;
     }
 }

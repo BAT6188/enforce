@@ -2,21 +2,21 @@
 Navicat MySQL Data Transfer
 
 Source Server         : localhost
-Source Server Version : 50547
+Source Server Version : 50553
 Source Host           : localhost:3306
 Source Database       : enforce
 
 Target Server Type    : MYSQL
-Target Server Version : 50547
+Target Server Version : 50553
 File Encoding         : 936
 
-Date: 2017-06-06 07:40:47
+Date: 2017-06-06 17:33:33
 */
 
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
--- Table structure for area_dep
+-- Table structure for `area_dep`
 -- ----------------------------
 DROP TABLE IF EXISTS `area_dep`;
 CREATE TABLE `area_dep` (
@@ -73,7 +73,7 @@ INSERT INTO `area_dep` VALUES ('89', '1', '74', '石拐事故中队', '00005128', '', 
 INSERT INTO `area_dep` VALUES ('90', '1', '74', '石拐督察法制办', '00006128', '', '');
 
 -- ----------------------------
--- Table structure for area_pro
+-- Table structure for `area_pro`
 -- ----------------------------
 DROP TABLE IF EXISTS `area_pro`;
 CREATE TABLE `area_pro` (
@@ -88,7 +88,7 @@ CREATE TABLE `area_pro` (
 INSERT INTO `area_pro` VALUES ('1', '部门');
 
 -- ----------------------------
--- Table structure for employee
+-- Table structure for `employee`
 -- ----------------------------
 DROP TABLE IF EXISTS `employee`;
 CREATE TABLE `employee` (
@@ -135,7 +135,7 @@ INSERT INTO `employee` VALUES ('28', '88', '文里', '000129', '男', '12345678919'
 INSERT INTO `employee` VALUES ('29', '74', '警员', '123456', '男', '123456789030', '', '', null, '', '1', '0', null, null);
 
 -- ----------------------------
--- Table structure for menu
+-- Table structure for `menu`
 -- ----------------------------
 DROP TABLE IF EXISTS `menu`;
 CREATE TABLE `menu` (
@@ -153,16 +153,11 @@ CREATE TABLE `menu` (
 -- Records of menu
 -- ----------------------------
 INSERT INTO `menu` VALUES ('100', '0', '系统管理', '', '0', 'icon-wrench', '1');
-INSERT INTO `menu` VALUES ('101', '100', '角色管理', 'Rolereg/index', '1', 'icon-folder_user', '1');
-INSERT INTO `menu` VALUES ('102', '100', '用户管理', 'Userreg/index', '2', 'icon-status_online', '1');
-INSERT INTO `menu` VALUES ('103', '100', '部门管理', 'Areareg/index', '3', 'icon-world', '1');
+INSERT INTO `menu` VALUES ('101', '100', '角色管理', 'Role/index', '5', 'icon-folder_user', '1');
+INSERT INTO `menu` VALUES ('102', '100', '用户管理', 'User/index', '4', 'icon-status_online', '1');
+INSERT INTO `menu` VALUES ('103', '100', '部门管理', 'Area/index', '3', 'icon-world', '1');
 INSERT INTO `menu` VALUES ('200', '0', '设备管理', '', '1', 'icon-tux', '1');
 INSERT INTO `menu` VALUES ('201', '200', '站点管理', 'Serinfo/index', '1', 'icon-tux', '1');
-INSERT INTO `menu` VALUES ('300', '0', '警员管理', '', '2', 'icon-group', '1');
-INSERT INTO `menu` VALUES ('301', '300', '基本信息', 'Employee/index', '1', 'icon-vcard', '1');
-INSERT INTO `menu` VALUES ('302', '300', '访客管理', '', '2', 'icon-user', '1');
-INSERT INTO `menu` VALUES ('303', '300', '照片查询', 'Employee/showPhoto', '3', 'icon-picture_go', '1');
-INSERT INTO `menu` VALUES ('304', '300', '底库分析', 'Photolib/index', '4', 'icon-photos', '1');
 INSERT INTO `menu` VALUES ('400', '0', '统计分析', '', '3', 'icon-group_link', '1');
 INSERT INTO `menu` VALUES ('401', '400', '车辆盘查统计', '', '1', 'icon-group_link', '1');
 INSERT INTO `menu` VALUES ('402', '400', '人员盘查统计', '', '2', 'icon-user_comment', '1');
@@ -180,9 +175,11 @@ INSERT INTO `menu` VALUES ('405', '400', '设备统计', null, '5', null, '1');
 INSERT INTO `menu` VALUES ('406', '400', '站点统计', null, '6', null, '1');
 INSERT INTO `menu` VALUES ('407', '400', '分类统计', null, '7', null, '1');
 INSERT INTO `menu` VALUES ('408', '400', '拍摄统计', null, '0', null, '1');
+INSERT INTO `menu` VALUES ('104', '100', '警员录入', 'Employee/index', '2', 'icon-vcard', '1');
+INSERT INTO `menu` VALUES ('105', '100', '警员查看', 'Employee/showPhoto', '1', 'icon-picture_go', '1');
 
 -- ----------------------------
--- Table structure for pe_base
+-- Table structure for `pe_base`
 -- ----------------------------
 DROP TABLE IF EXISTS `pe_base`;
 CREATE TABLE `pe_base` (
@@ -198,7 +195,7 @@ CREATE TABLE `pe_base` (
 INSERT INTO `pe_base` VALUES ('1111111', '123456', null);
 
 -- ----------------------------
--- Table structure for pe_log_list
+-- Table structure for `pe_log_list`
 -- ----------------------------
 DROP TABLE IF EXISTS `pe_log_list`;
 CREATE TABLE `pe_log_list` (
@@ -218,14 +215,14 @@ CREATE TABLE `pe_log_list` (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for pe_video_list
+-- Table structure for `pe_video_list`
 -- ----------------------------
 DROP TABLE IF EXISTS `pe_video_list`;
 CREATE TABLE `pe_video_list` (
   `wjbh` varchar(100) NOT NULL DEFAULT '0000000@209901010101010000' COMMENT '文件编号 <产口序号>@<年月日><文件序号>',
   `wjbm` varchar(100) DEFAULT NULL COMMENT '文件别名',
   `pssj` datetime NOT NULL COMMENT '拍摄时间',
-  `wjdx` varchar(32) DEFAULT NULL COMMENT '文件大小',
+  `wjcd` varchar(32) DEFAULT NULL COMMENT '文件长度',
   `wjlx` int(2) DEFAULT NULL COMMENT '0:未知,1:视频,2:音频,3:图片',
   `jyxm` varchar(60) DEFAULT NULL COMMENT '警员姓名',
   `jybh` varchar(6) NOT NULL DEFAULT '000000' COMMENT '警员编号',
@@ -253,7 +250,7 @@ CREATE TABLE `pe_video_list` (
 INSERT INTO `pe_video_list` VALUES ('1111111@201506250850560000', '吴晓@201506250850560000.mp4', '2015-06-25 08:50:56', '6.5', '1', null, '123456', null, null, '1111111', '192.168.0.249', null, 'http://192.168.0.249/pe_data/1111111/20160523/mp4/1111111@201506250850560000.mp4', null, '2017-05-24 17:44:11', null, '12345', '192.168.0.222', null, '0', null);
 
 -- ----------------------------
--- Table structure for role
+-- Table structure for `role`
 -- ----------------------------
 DROP TABLE IF EXISTS `role`;
 CREATE TABLE `role` (
@@ -268,12 +265,12 @@ CREATE TABLE `role` (
 -- ----------------------------
 -- Records of role
 -- ----------------------------
-INSERT INTO `role` VALUES ('1', '系统管理员', '拥有所有操作权限', '100,101,102,103,200,201,202,300,301,302,303,304,400,401,402,403,404,405,406,407,408,500,501,502,503,504,505', '0');
+INSERT INTO `role` VALUES ('1', '系统管理员', '拥有所有操作权限', '100,101,102,103,104,105,200,201,202,400,401,402,403,404,405,406,407,408,500,501,502,503,504,505', '0');
 INSERT INTO `role` VALUES ('2', '普通用户', '拥有基本的操作权限', '500,503,502,501,400,404,402,401,403,300,304,303,302,301,200,201,202,100,103,102,101', '1');
 INSERT INTO `role` VALUES ('4', '设备用户', '拥有用户对设备管理的权限', '500,503,502,501,303,301,202,100,103,102,101', '2');
 
 -- ----------------------------
--- Table structure for sys_log
+-- Table structure for `sys_log`
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_log`;
 CREATE TABLE `sys_log` (
@@ -290,7 +287,7 @@ CREATE TABLE `sys_log` (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for user
+-- Table structure for `user`
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
@@ -315,12 +312,12 @@ CREATE TABLE `user` (
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES ('1', 'admin', '123456', '1', '0', '', '张三', '男', '', '', '', '0', '2017-05-22 13:10:12', '53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,78,79,80,81,82,83,84,85,86,87,88,89,90');
+INSERT INTO `user` VALUES ('1', 'admin', '123456', '1', '0', '', '张三', '男', '', '', '', '0', '2017-06-06 17:19:34', '53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,78,79,80,81,82,83,84,85,86,87,88,89,90');
 INSERT INTO `user` VALUES ('2', 'face', 'face', '2', '0', '', '', '男', '', '', '', '1', '2016-11-30 16:45:27', '');
 INSERT INTO `user` VALUES ('3', 'test', 'test', '4', '0', '', '', '男', '', '', '', '2', '2016-11-23 17:27:08', '');
 
 -- ----------------------------
--- Table structure for ws_base
+-- Table structure for `ws_base`
 -- ----------------------------
 DROP TABLE IF EXISTS `ws_base`;
 CREATE TABLE `ws_base` (
@@ -342,7 +339,7 @@ CREATE TABLE `ws_base` (
 INSERT INTO `ws_base` VALUES ('12345', '192.168.0.222', '派出所', null, null, '1', '2017-05-24 17:52:12', '1', null);
 
 -- ----------------------------
--- Table structure for ws_log
+-- Table structure for `ws_log`
 -- ----------------------------
 DROP TABLE IF EXISTS `ws_log`;
 CREATE TABLE `ws_log` (
@@ -358,4 +355,3 @@ CREATE TABLE `ws_log` (
 -- ----------------------------
 -- Records of ws_log
 -- ----------------------------
-SET FOREIGN_KEY_CHECKS=1;

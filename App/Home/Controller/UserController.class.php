@@ -1,26 +1,18 @@
 <?php
 namespace Home\Controller;
 
-class UserregController extends CommonController
+class UserController extends CommonController
 {
     protected $tab_id = 'userid';
     protected $models = ['user'=>'Enforce\User',
                          'role'=>'Enforce\Role'];
     protected $actions = ['user'=>'User',
                           'area'=>'Area'];
+    protected $views = ['index'=>'user'];
     public function index()
     {
-        $ucTab = ucwords($this->tab);
-        $url['datagridUrl'] = U($ucTab.'/dataList');
-        $url['addUrl'] = U($ucTab.'/dataAdd');
-        $url['editUrl'] = U($ucTab.'/dataEdit');
-        $url['removeUrl'] = U($ucTab.'/dataRemove');
-        $url['saveareaUrl'] = U($ucTab.'/savearea');
-        $url['userareaUrl'] = U($ucTab.'/userarea');
-        $this->assign('url',$url);
-
         $this->assignInfo();
-        $this->display($this->tab);
+        $this->display($this->views['index']);
     }
 
     public function dataList()
@@ -45,7 +37,12 @@ class UserregController extends CommonController
         $check['userid'] = array('in',$all_list);
 
         $data = $db->getTableList($check,$page,$rows);
-        $this->ajaxReturn($data);
+        //对与数据转换 找到统一办法后解决
+        /*$roles = D($this->models['role'])->getField('roleid,rolename');
+        foreach ($data['rows'] as &$value) {
+            $value['roleid'] = $roles[$value['roleid']];
+        }*/
+        $this->ajaxReturn(g2us($data));
     }
 
     public function dataAdd()
@@ -88,14 +85,13 @@ class UserregController extends CommonController
         $where['roleid'] = session('roleid');
         $data = $db->where($where)->select();
         $l_arr = [0=>'roleid',1=>'proleid'];
-        $info_f = $this->getChData($data,$db,$l_arr);
+        $info_f = $this->getChData($data,$this->models['role'],$l_arr);
         //添加修改时没有本级
-
+        $info_f = g2us($info_f);
         $info['role'] = $info_f;
         //用与显示
-        $info_f= array_merge($info_f,$data);
+        $info_f= array_merge($info_f,g2us($data));
         $info['roleJson'] = json_encode($info_f);
-
         $this->assign('info',$info);
     }
 

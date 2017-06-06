@@ -4,21 +4,18 @@ namespace Home\Controller;
 class AreaController extends CommonController
 {
     protected $tab_id = 'areaid';           //表主键
+    //模型
     protected $models = ['area'=>'Enforce\AreaDep',
                          'user'=>'Enforce\User',
-                         'area'=>'Enforce\Areapro'];
-    protected $remove_link_tabs = ['Employee'];    //删除区域时需要删除的东西
+                         'areapro'=>'Enforce\AreaPro'];
+    protected $remove_link_tabs = ['enforce'=>'Enforce\Employee'];    //删除部门时需要删除的警员
+    //控制器
     protected $actions = ['user'=>'User'];
+    protected $views = ['index'=>'area'];
     public function index()
     {
-        $ucTab = ucwords($this->tab);
-        $url['datagridUrl'] = U($ucTab.'/dataList');
-        $url['addUrl'] = U($ucTab.'/dataAdd');
-        $url['editUrl'] = U($ucTab.'/dataEdit');
-        $url['removeUrl'] = U($ucTab.'/dataRemove');
-        $this->assign('url',$url);
         $this->assignInfo();
-        $this->display($this->tab);
+        $this->display($this->views['index']);
     }
 
     public function dataList()
@@ -50,7 +47,7 @@ class AreaController extends CommonController
             $order = 'areaid asc';
             $data = $db->getTableList($check,$page,$rows,$order);
         }
-        $this->ajaxReturn($data);
+        $this->ajaxReturn(g2us($data));
     }
 
     public function dataAdd()
@@ -114,7 +111,7 @@ class AreaController extends CommonController
                 $db_rm->getTableDel($where);
             }
         }else{
-            $result['message'] = '对不起,你没有权限删除这些区域';
+            $result['message'] = '对不起,你没有权限删除这些部门';
         }
         $this->ajaxReturn($result);
     }
@@ -131,11 +128,11 @@ class AreaController extends CommonController
 
     public function assignInfo()
     {
-        $db = D('Areapro');
-        $info['areapro'] = $db->listAll();
+        $db = D($this->models['areapro']);
+        $info['areapro'] = g2us($db->select());
         $info['proJson'] = json_encode($info['areapro']);
-        $db = D('Areareg');
-        $info['areareg'] = $db->listAll();
+        $db = D($this->models['area']);
+        $info['areareg'] = g2us($db->select());
         $info['arearegJson'] = json_encode($info['areareg']);
         $this->assign('info',$info);
     }
@@ -157,7 +154,7 @@ class AreaController extends CommonController
         }
         if(!empty($data_f)){
             $lc=['areaid','fatherareaid'];
-            $data_s = $this->getParentData($data_f,$this->tab,$lc);
+            $data_s = $this->getParentData($data_f,$this->models['area'],$lc);
         }
         if(!empty($data_s)){
             $data = array_merge($data_f,$data_s);
@@ -171,14 +168,15 @@ class AreaController extends CommonController
         //$L_attributes 额外需要保存的信息
         $L_attributes = ['arearcode','rperson','rphone'];
         $icons = ['icon-map_go','icon-map'];
-        $data_tree = $this->formatTree($ids,$data,$l_arr,$L_attributes,'',$icons);
+        $noclose = $db->where('fatherareaid = 0')->getField('areaid',true);
+        $data_tree = $this->formatTree($ids,$data,$l_arr,$L_attributes,'',$icons,$noclose);
         return $data_tree;
     }
 
     public function data_tree_list()
     {
         $data_tree = $this->tree_list();
-        echo json_encode($data_tree);
+        $this->ajaxReturn(g2us($data_tree));
     }
 
     public function tree_list_all()
@@ -195,8 +193,9 @@ class AreaController extends CommonController
         //$L_attributes 额外需要保存的信息
         $L_attributes = [];
         $icons = ['icon-map_go','icon-map'];
-        $data_tree = $this->formatTree($ids,$area_all,$l_arr,$L_attributes,$m_userarea,$icons);
-        echo json_encode($data_tree);
+        $noclose = array(0);
+        $data_tree = $this->formatTree($ids,$area_all,$l_arr,$L_attributes,$m_userarea,$icons,$noclose);
+        $this->ajaxReturn(g2us($data_tree));
     }
 
     public function userarea()
@@ -245,7 +244,7 @@ class AreaController extends CommonController
         $where['areaid'] = $areaid;
         $data = $db->where($where)->select();
         $l_arr = [0=>'areaid',1=>'fatherareaid'];
-        $info_f = $this->getChData($data,$this->tab,$l_arr);
+        $info_f = $this->getChData($data,$this->models['area'],$l_arr);
         $info_f = array_merge($data,$info_f);
         $all_list = array();
         foreach ($info_f as  $info_c) {

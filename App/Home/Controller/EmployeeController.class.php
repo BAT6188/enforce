@@ -5,27 +5,21 @@ class EmployeeController extends CommonController
 {
     //表的表名-自增主键
     protected $tab_id = 'empid';
-
-    protected $tab = 'employee';
-    protected $link_tab = 'Areareg';
-    protected $photo_tab = 'employeepho';
-    protected $photolib_tab = 'phototolib';
-    protected $models = ['employee'=>'Enforce\Employee',
-                         'area'=>'Enforce\Area'];
+    protected $models = ['employee'=>'Enforce\Employee',    //警员
+                         'area'=>'Enforce\AreaDep'];           //部门
+    protected $actions = ['area'=>'Area'];
+    protected $views = ['index'=>'employee'];
     //展示
     public function index()
     {
-        $ucTab = ucwords($this->tab);
-        $url['datagridUrl'] = U($ucTab.'/dataList');
-        $url['addUrl'] = U($ucTab.'/dataAdd');
-        $url['editUrl'] = U($ucTab.'/dataEdit');
-        $url['removeUrl'] = U($ucTab.'/dataRemove');
-        $url['uplaodImgUrl'] = U($ucTab.'/uplaodImg');
-        $url['get_empImagesUrl'] = U($ucTab.'/get_empImages');
-        $url['removeImageUrl'] = U($ucTab.'/removeImage');
-        $this->assign('url',$url);
-        $this->assignInfo();
-        $this->display($this->tab);
+        $action = A($this->actions['area']);
+        //如果没有
+        $areaTree = $action->tree_list();
+        $rootId = !empty($areaTree) ? $areaTree[0]['id'] : 0;
+        $rootName = !empty($areaTree) ? g2u($areaTree[0]['text']) : '系统根部门';
+        $this->assign('areaid',$rootId);
+        $this->assign('areaname',$rootName);
+        $this->display($this->views['index']);
     }
    	public function showPhoto(){
    		$ucTab = ucwords($this->tab);
@@ -61,8 +55,9 @@ class EmployeeController extends CommonController
         //初始数据展示限制只显示自身和下级角色
         $where['areaid'] = $areaid;
         $data = $dbc->where($where)->select();
+        $areas = $dbc->getField('areaid,areaname');
         $l_arr = [0=>'areaid',1=>'fatherareaid'];
-        $info_f = $this->getChData($data,$this->link_tab,$l_arr);
+        $info_f = $this->getChData($data,$this->models['area'],$l_arr);
         $info_f= array_merge($data,$info_f);
         $all_list = array();
         foreach ($info_f as  $info_c) {
@@ -73,7 +68,10 @@ class EmployeeController extends CommonController
         $all_list = array_intersect($c_area, $all_list);
         $check['areaid'] = array('in',$all_list);
         $data = $db->getTableList($check,$page,$rows);
-        $this->ajaxReturn($data);
+        foreach ($data['rows'] as &$value) {
+            $value['areaname'] = array_key_exists($value['areaid'],$areas) ? $areas[$value['areaid']]  : u2g('系统根区域');
+        }
+        $this->ajaxReturn(g2us($data));
     }
     //增加事件
     public function dataAdd()
@@ -85,7 +83,7 @@ class EmployeeController extends CommonController
         if(in_array($request['areaid'],$c_area)){
             $result = $db->getTableAdd($request);
         }else{
-            $result['message'] = '对不起，你无法向该区域添加员工！因为该区域不在你的管辖范围，或者不全在管辖范围';
+            $result['message'] = '对不起，你无法向该部门添加警员！因为该部门不在你的管辖范围，或者不全在管辖范围';
         }
         $this->ajaxReturn($result);
     }
@@ -128,10 +126,7 @@ class EmployeeController extends CommonController
     //准备前端页面数据
     public function assignInfo()
     {
-        $db = D('Photolib');
-        $info['photolib'] = $db->listAll();
-        $info['photolibJson'] = json_encode($info['photolib']);
-        $db = D('Areareg');
+        $db = D($this->models['area']);
         $info['areareg'] = $db->listAll();
         $info['arearegJson'] = json_encode($info['areareg']);
         $action = A('Rolereg');
@@ -270,7 +265,7 @@ class EmployeeController extends CommonController
         //普通用户信息展示
         if(session('usertype') == 'normal'){
             //当前用户的管理区域
-            $action = A('Areareg');
+            $action = A($this->actions['area']);
             $userarea = $action->tree_list();    //easyui tree
             //dump($userarea);
             $c_area = explode(',', session('userarea'));        //实际管理区域
@@ -285,7 +280,6 @@ class EmployeeController extends CommonController
         }
         //警员信息展示
         if(session('usertype') == 'police'){
-            $where['code'] = 'jh1234';
             $empInfo = $empDb->where($where)->find();
             $nowareaid = $empInfo['areaid'];
             $areaDb = D($this->models['area']);

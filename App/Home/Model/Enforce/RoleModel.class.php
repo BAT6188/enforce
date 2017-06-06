@@ -4,6 +4,6 @@
  **********************/
 namespace Home\Model\Enforce;
 
-class RoleDepModel extends CommonModel{
+class RoleModel extends CommonModel{
     protected $tablename = 'role';
 }

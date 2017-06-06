@@ -27,7 +27,6 @@ class BaseModel extends Model
         else
         {
             $data['total'] = 0;
-            //$data['rows']  = '';
             $data['rows']  = array();
         }
         //用于语句调试

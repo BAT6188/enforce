@@ -25,6 +25,8 @@ var App = function(rootPath){
     this.loadedCss = [];
     //js数组
     this.loadedJs = [];
+    //TP后台数据，用于html页面初始化
+    this.tp = {};
     //url数组
     this.urls = [];
     this.public = this.root+'Public/';
@@ -194,7 +196,7 @@ App.prototype.listenKey = function(key,callback){
  * @param  array $arr   比较的数组
  * @return boolean
  */
-App.prototype.inArray(search,arr){
+App.prototype.inArray = function(search,arr){
     for (var i = 0; i < arr.length; i++) {
         if(arr[i] == search) return true;
     }

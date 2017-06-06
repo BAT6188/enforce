@@ -1,0 +1,67 @@
+<extend name="layouts:master" />
+<block name="link"></block>
+<block name="src">
+<script type="text/javascript" src="__PUBLIC__/js/Role/role.js"></script>
+</block>
+<block name="main">
+	<table id="datagrid" toolbar="#toolbar"></table>
+
+    <div id="toolbar">
+        <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
+             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="things.show()">全部</a>&nbsp;&nbsp;&nbsp;
+            角色名: <input id='searchInput'  class="easyui-textbox" data-options="height:22"  style="width:168px"/>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="things.search()">搜索</a>
+        </form>
+        <a href="javascript:void(0)" onclick="things.addBar()" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a>
+        <a href="javascript:void(0)" onclick="things.editBar()" class="easyui-linkbutton" data-options="iconCls:'icon icon-edit',plain:true">修改</a>
+        <a href="javascript:void(0)" onclick="things.remove()" class="easyui-linkbutton" data-options="iconCls:'icon icon-delete',plain:true">
+        删除</a>
+        <a href="javascript:void(0)" onclick="things.allowMenuBar()" class="easyui-linkbutton" data-options="iconCls:'icon icon-basket_put',plain:true">权限分配</a>
+    </div>
+<!-- 增加 -->
+    <div id="addDialog" class="easyui-dialog" title="添加角色" buttons="#addButtons"
+    data-options="iconCls:'icon-add',resizable:true,modal:true,closed:true">
+    	<form id="addForm" method="post">
+    		<div class="form_m"><div for="name" class="form_label">角色名 : </div>
+    			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="rolename" data-options="required:true" /></div>
+    		<div class="form_m"><div for="name" class="form_label">备注 : </div>
+    			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="remark" /></div>
+            <div class="form_m"><div for="name" class="form_label">角色类型 : </div>
+                <select class="easyui-combobox form_in" name="sex" style="width: 181px;">
+                    <option value="0">管理</option>
+                    <option value="1">警员</option>
+                </select>
+            </div>
+    	</form>
+    </div>
+    <div id="addButtons">
+    	<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="things.add()" style="width:90px">确认</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
+    $('#addDialog').dialog('close')" style="width:90px">取消</a>
+    </div>
+<!-- 修改 -->
+    <div id="editDialog" class="easyui-dialog" title="修改角色" buttons="#editButtons"
+    data-options="iconCls:'icon-add',resizable:true,modal:true,closed:true">
+        <form id="editForm" method="post">
+            <div class="form_m" style="display: none"><div for="name" class="form_label">角色id : </div>
+                <input class="easyui-validatebox form_in easyui-textbox" type="text" name="roleid"  /></div>
+            <div class="form_m"><div for="name" class="form_label">角色名 : </div>
+                <input class="easyui-validatebox form_in easyui-textbox" type="text" name="rolename" data-options="required:true" /></div>
+            <div class="form_m"><div for="name" class="form_label">备注 : </div>
+                <input class="easyui-validatebox form_in easyui-textbox" type="text" name="remark" /></div>
+        </form>
+    </div>
+    <div id="editButtons">
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="things.edit()" style="width:90px">确认</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
+    $('#editDialog').dialog('close')" style="width:90px">取消</a>
+    </div>
+     <div id="menuDialog" class="easyui-dialog" style="width:400px;padding:10px 20px;height: 400px" closed="true" buttons="#menuButtons"  modal="true">
+        <ul id="menuList"></ul>
+        <div id="menuButtons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="menu_sure" iconCls="icon-ok" onclick="things.allowMenu()" style="width:90px">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
+            $('#menuDialog').dialog('close')" style="width:90px">取消</a>
+        </div>
+    </div>
+</block>

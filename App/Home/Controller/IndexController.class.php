@@ -2,85 +2,95 @@
 namespace Home\Controller;
 
 class IndexController extends CommonController {
-
+    protected $models = ['area'=>'Enforce\Area',
+                         'role'=>'Enforce\Role',
+                         'user'=>'Enforce\User',
+                         'employee'=>'Enforce\Employee',
+                         'menu'=>'Enforce\Menu'];
+    protected $actions = ['menu'=>'Menu'];
     public function index()
     {
         if(!(session('?role'))){
             $this->redirect('Index/login');
             exit;
         }
-        $name = M('functionreg')->getField('funname');
+        //$name = M('functionreg')->getField('funname');
 
-        $action = A('Functionreg');
-
-    	  $menus = $action->getFunList();
-
-    	  $this->assign('menus',$menus);
+        $action = A($this->actions['menu']);
+    	$menus = $action->getFunList();
+    	$this->assign('menus',g2us($menus));
         $this->display();
     }
 
     public function login()
     {
-        $info = '';
+        $this->display('login');
+    }
+    //验证登陆
+    public function check_login()
+    {
         if(IS_POST){
+            $result = array();
+            $result['status'] = false;
+            $result['message'] = '验证失败';
+
             $request = I();
-            $db = D('Userreg');
+            $db = D($this->models['user']);
             //验证登录用户
-            $result = $db->check_exist($request);
-            $roleDb = D('Rolereg');
-            if($result){
+            $res = $db->check_exist($request);
+            $roleDb = D($this->models['role']);
+            if($res){
                 $ip = get_client_ip();
-                if($result['bindingip'] == 1){
-                    if($ip != $result['clientip']){
-                        $info = '请在指定IP登录';
-                        $this->assign('info',$info);
-                        $this->display();
-                        exit;
+                if($res['bindingip'] == 1){
+                    if($ip != $res['clientip']){
+                       $res['message'] = '请在指定IP登录';
+                       $this->ajaxReturn($result);
                     }
                 }
                 //用户验证
                 $data['state'] = date('Y-m-d H:i:s');
-                $where['userid'] = $result['userid'];
+                $where['userid'] = $res['userid'];
                 $db->getTableEdit($where,$data);
-                $where['roleid'] = $result['roleid'];
+                $where['roleid'] = $res['roleid'];
                 $roleData = $roleDb->where($where)->field('rolename,functionlist')->find();
                 if(!empty($roleData)){
+                    $roleData = g2us($roleData);
                     session('menu',$roleData['functionlist']);
                     session('role',$roleData['rolename']);
-                    session('user',$result['username']);
-                    session('roleid',$result['roleid']);
-                    session('userid',$result['userid']);
-                    session('userarea',$result['userarea']);
+                    session('user',$res['username']);
+                    session('roleid',$res['roleid']);
+                    session('userid',$res['userid']);
+                    session('userarea',$res['userarea']);
                     session('usertype','normal');       //登陆用户属性
-                    $this->redirect('Index/index');
-                    exit;
+                    $result['status'] = true;
+                    $result['message'] = '验证成功';
                 }else{
-                    $info = '用户名，密码错误';
+                    $result['message'] = '用户名，密码错误';
                 }
             }else{
                 //警员验证
                 $where['code'] = I('username');
-                $where['password'] = I('userpassword');
-                $empDb = D('employee');
+                $where['password'] = I('password');
+                $empDb = D($this->models['employee']);
                 $res = $empDb->where($where)->find();
+                print_r($res);
                 if($res){
-                    $roleData = $roleDb->where('roleid = 2')->field('rolename,functionlist')->find();
+                    $roleData = $roleDb->where('roleid = '.$res['roleid'])->field('rolename,functionlist')->find();
+                    $roleData = g2us($roleData);
                     session('role',$roleData['rolename']);
                     session('menu',$roleData['functionlist']);
                     session('user',$res['name']);
                     session('code',I('username'));
                     session('usertype','police');       //登陆用户属性
-                    $this->redirect('Index/index');
-                    exit;
+                    $result['status'] = true;
+                    $result['message'] = '验证成功';
                 }else{
-                    $info = '用户名，密码错误';
+                    $result['message'] = '用户名，密码错误';
                 }
             }
+            $this->ajaxReturn($result);
         }
-        $this->assign('info',$info);
-        $this->display();
     }
-
     public function loginOut()
     {
         session(null);

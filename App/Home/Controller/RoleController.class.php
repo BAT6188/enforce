@@ -6,19 +6,10 @@ class RoleController extends CommonController
     protected $tab_id = 'roleid';
     protected $models = ['role'=>'Enforce\Role',
                          'user'=>'Enforce\User'];
-
+    protected $views = ['index'=>'role'];
     public function index()
     {
-        $ucTab = ucwords($this->tab);
-        $url['datagridUrl'] = U($ucTab.'/dataList');
-        $url['addUrl'] = U($ucTab.'/dataAdd');
-        $url['editUrl'] = U($ucTab.'/dataEdit');
-        $url['removeUrl'] = U($ucTab.'/dataRemove');
-        $url['roleMenuUrl'] = U($ucTab.'/roleMenu');
-        $url['saveMenuUrl'] = U($ucTab.'/saveMenu');
-        $url['menuListUrl'] = U('Functionreg/dataList');
-        $this->assign('url',$url);
-        $this->display($this->tab);
+        $this->display($this->views['index']);
     }
 
     public function dataList()
@@ -31,7 +22,7 @@ class RoleController extends CommonController
             $check['rolename'] = array('like','%'.$request['rolename'].'%');
         }
         $data = $this->get_role_info($check,$page,$rows);
-        $this->ajaxReturn($data);
+        $this->ajaxReturn(g2us($data));
     }
 
     public function get_role_info($check,$page,$rows)
@@ -41,7 +32,7 @@ class RoleController extends CommonController
         $where['roleid'] = session('roleid');
         $data = $db->where($where)->select();
         $l_arr = [0=>'roleid',1=>'proleid'];
-        $info_f = $this->getChData($data,$this->tab,$l_arr);
+        $info_f = $this->getChData($data,$this->models['role'],$l_arr);
         $info_f= array_merge($data,$info_f);
         $all_list = array();
         foreach ($info_f as  $info_c) {
@@ -104,7 +95,9 @@ class RoleController extends CommonController
         $db = D($this->models['role']);
         $where[$this->tab_id] = $request[$this->tab_id];
         $menu = $db->where($where)->field('functionlist')->find();
+        //$menu = $db->where($where)->field('functionlist')->find();
         echo $menu ? $menu['functionlist'] : '';
+        exit;
     }
 
     public function saveMenu()
