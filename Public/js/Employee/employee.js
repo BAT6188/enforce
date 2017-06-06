@@ -27,6 +27,9 @@ module.search = function(){
         name:name
     });
 }
+module.addBar = function(){
+    $('#dialog').dialog('open');
+}
 $(function(){
     //树的初始化
     tree.init();

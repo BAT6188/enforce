@@ -10,7 +10,7 @@ class CommonController extends Controller {
 	 * @param  array $ids   父级菜单id
 	 * @param  array $datas 修要处理的菜单
 	 * @param  array $l_arr 保存菜单的一些信息  0-自身id  1-保存内容 2-父ID 3-排序
-	 * @param  array $L_attributes 额外需要保存的信息
+	 * @param  array $L_attributes 额外需要保存的信息 ['iconcls']//直接处理  ['iconCls'=>'iconcls']//根据键名处理
      * @param  array $check_arr 需要被勾选的数组
      * @param  array $icons 需要添加的图标 icon-remove 0-父图标 1-子图标
      * @param  array $noclose  无需折叠的数组
@@ -28,12 +28,16 @@ class CommonController extends Controller {
                     $doTree['id'] = $data[$l_arr[0]];
                     if(!empty($check_arr)){
                         if(in_array($doTree['id'],$check_arr)){
-                                $doTree['checked'] = true;
+                            $doTree['checked'] = true;
                         }
                     }
                     $doTree['text'] = $data[$l_arr[1]];
-                    foreach ($L_attributes as $L_attribute) {
-                    	$doTree[$L_attribute] = $data[$L_attribute];
+                    foreach ($L_attributes as $key=>$L_attribute) {
+                        if(!is_numeric($key)){
+                            $doTree[$key] = $data[$L_attribute];
+                        }else{
+                            $doTree[$L_attribute] = $data[$L_attribute];
+                        }
                     }
                     //删除已经符合条件的数据减少下一次循环的次数
                     unset($datas[$key]);

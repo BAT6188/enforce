@@ -136,16 +136,11 @@ class AreaController extends CommonController
         $info['arearegJson'] = json_encode($info['areareg']);
         $this->assign('info',$info);
     }
-    /**
-     * 获取当前用户管理区域
-     * @return array easyui-tree
-     */
-    public function tree_list()
+    //获取自身展示部门
+    public function all_user_area()
     {
         $db = D($this->models['area']);
-
         $userarea = $this->userarea();
-
         $data_f = array();
         $data_s = array();
         if(!empty($userarea)){
@@ -161,7 +156,15 @@ class AreaController extends CommonController
         }else{
             $data = $data_f;
         }
-
+        return $data;
+    }
+    /**
+     * 获取当前用户管理区域
+     * @return array easyui-tree
+     */
+    public function tree_list()
+    {
+        $data = $this->all_user_area();
         $ids = array(0);
         //$l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr
         $l_arr = ['areaid','areaname','fatherareaid','areaid'];
@@ -172,13 +175,16 @@ class AreaController extends CommonController
         $data_tree = $this->formatTree($ids,$data,$l_arr,$L_attributes,'',$icons,$noclose);
         return $data_tree;
     }
-
+    //前端请求
     public function data_tree_list()
     {
         $data_tree = $this->tree_list();
         $this->ajaxReturn(g2us($data_tree));
     }
-
+    /**
+     * 所有部门加上  自身管理的权限
+     * @return
+     */
     public function tree_list_all()
     {
         $userid = I('userid');

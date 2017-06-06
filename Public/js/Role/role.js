@@ -1,24 +1,29 @@
 var things = {};
 things.datagridUrl = app.url('Role/dataList');
-things.addUrl = app.url('Menu/dataList');
+things.addUrl = app.url('Role/dataAdd');
 things.editUrl = app.url('Role/dataEdit');
 things.removeUrl = app.url('Role/dataRemove');
 things.menuListUrl = app.url('Menu/dataList');
 things.roleMenuUrl = app.url('Role/roleMenu');
 things.saveMenuUrl = app.url('Role/saveMenu');
-things.roleid = "{:session('roleid')}";
+things.roleid = app.tp.roleid;
 things.select_roleid;
 things.show = function(){
     $('#searchForm').form('reset');
-    $('#datagrid').datagrid('load',{});
+    $('#datagrid').datagrid('load',{
+        rand:Math.random()
+    });
 }
 things.callback = function(data){
    // data = eval('('+data+')');
     $.messager.alert('操作提示',data.message,'info');
-    $('#datagrid').datagrid('reload');
+    $('#datagrid').datagrid('reload',{
+        rand:Math.random()
+    });
 }
 things.addBar = function(){
     $('#addDialog').dialog('open');
+    $('#addForm').form('clear');
 }
 things.editBar = function(){
     var infos = $('#datagrid').datagrid('getSelections');
@@ -31,27 +36,31 @@ things.editBar = function(){
         $('#editDialog').dialog('open');
     }
 }
-things.add = function(){
-    $('#addForm').form('submit',{
-        url:things.addUrl,
+things.change_info = function(form,url){
+    var params = app.serializeJson(form);
+    if(!$('#addForm').form('validate')){
+        return false;
+    }
+    $.ajax({
+        url:url,
+        type:'post',
+        dataType:'json',
+        data:params,
         success:function(data){
-            data = eval('('+data+')');
             $('#addDialog').dialog('close');
-            $.messager.alert('操作提示',data.message,'info');
-            $('#datagrid').datagrid('reload');
+            things.callback(data);
+        },
+        error:function(data){
+            $('#addDialog').dialog('close');
+            $.meassager.alert('操作提示','网络故障','info');
         }
     });
 }
+things.add = function(){
+    things.change_info('#addForm',things.addUrl);
+}
 things.edit = function(){
-    $('#editForm').form('submit',{
-        url:things.editUrl,
-        success:function(data){
-            data = eval('('+data+')');
-            $('#editDialog').dialog('close');
-            $.messager.alert('操作提示',data.message,'info');
-            $('#datagrid').datagrid('reload');
-        }
-    });
+    things.change_info('#editForm',things.editUrl);
 }
 things.remove = function(){
     var infos = $('#datagrid').datagrid('getSelections');
@@ -143,25 +152,13 @@ things.load_have_menu = function(roleid){
     $.ajax({
         type:'GET',
         url:things.roleMenuUrl,
+        dataType:'json',
         data:{
             roleid:roleid
         },
         success:function(getRoleMenu){
-            var roleMenu = new Array();
-            if(getRoleMenu=='')
-                return false;
-
-            roleMenu = getRoleMenu.split(',');
-            var tag = $('#menuList').tree('getChildren');
-            $.each(tag,function(i,j){
-                var node = $('#menuList').tree('find', j.id);
-                $('#menuList').tree('uncheck', node.target);
-            });
-            $.each(roleMenu,function(n,m){
-                var node = $('#menuList').tree('find', m);
-                if(typeof(node)!='undefined'&&node!=null){
-                    $('#menuList').tree('check', node.target);
-                }
+            $('#menuList').tree({
+                data:getRoleMenu
             });
         }
     });
@@ -191,6 +188,7 @@ $(function(){
         {field:'roleid',title:'id',checkbox:true},
         {field:'rolename',title:'角色名',width:200,align:'center'},
         {field:'remark',title:'角色说明',width:200,align:'center'},
+        {field:'typename',title:'角色类型',width:200,align:'center'},
         {field:'functionlist',title:'权限清单',width:200,align:'center',formatter:function(v,r,i){
             return '<span style="color:#0E2D5F;cursor:pointer;">点击查看</span>';
         }}
@@ -198,15 +196,10 @@ $(function(){
         pagination:true
     });
     $('#menuList').tree({
-        //url:things.menuListUrl,
         method:'get',
         animate:true,
         lines:true,
         checkbox:true,
         cascadeCheck:true,
-        loadFilter:function(rows){
-            var info = eval(rows);
-            return info;
-        }
     });
 });

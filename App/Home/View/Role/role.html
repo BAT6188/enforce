@@ -1,11 +1,13 @@
 <extend name="layouts:master" />
 <block name="link"></block>
 <block name="src">
+<script type="text/javascript">
+app.tp.roleid = "{:session('roleid')}"
+</script>
 <script type="text/javascript" src="__PUBLIC__/js/Role/role.js"></script>
 </block>
 <block name="main">
 	<table id="datagrid" toolbar="#toolbar"></table>
-
     <div id="toolbar">
         <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
              <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="things.show()">全部</a>&nbsp;&nbsp;&nbsp;
@@ -26,8 +28,9 @@
     			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="rolename" data-options="required:true" /></div>
     		<div class="form_m"><div for="name" class="form_label">备注 : </div>
     			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="remark" /></div>
-            <div class="form_m"><div for="name" class="form_label">角色类型 : </div>
-                <select class="easyui-combobox form_in" name="sex" style="width: 181px;">
+            <div class="form_m"><div for="type" class="form_label">角色类型 : </div>
+                <select class="easyui-combobox form_in" name="type" style="width: 181px;" 
+                        data-options="editable:false">
                     <option value="0">管理</option>
                     <option value="1">警员</option>
                 </select>
@@ -49,6 +52,13 @@
                 <input class="easyui-validatebox form_in easyui-textbox" type="text" name="rolename" data-options="required:true" /></div>
             <div class="form_m"><div for="name" class="form_label">备注 : </div>
                 <input class="easyui-validatebox form_in easyui-textbox" type="text" name="remark" /></div>
+            <div class="form_m"><div for="type" class="form_label">角色类型 : </div>
+                <select class="easyui-combobox form_in" name="type" style="width: 181px;"
+                        data-options="editable:false">
+                    <option value="0">管理</option>
+                    <option value="1">警员</option>
+                </select>
+            </div>
         </form>
     </div>
     <div id="editButtons">

@@ -13,7 +13,17 @@ class MenuController extends CommonController
         $this->ajaxReturn($menuData);*/
         $this->ajaxReturn(g2us($this->getFunList()));
     }
-
+    //获取登录用户的菜单展示
+    public function get_fun_data()
+    {
+        $db = D($this->models['menu']);
+        $menuData= session('menu');
+        $where['id'] = array('in',explode(',', $menuData));
+        $data = $db->where($where)->order('ordernum desc')->select();
+        $datac = $this->getParentMenu($data);
+        $data = array_merge($data,$datac);
+        return $data;
+    }
     /**
      * 获取菜单列表
      * @return array
@@ -21,13 +31,7 @@ class MenuController extends CommonController
     public function getFunList()
     {
         $ids = array(0);
-        $db = D($this->models['menu']);
-        $menuData= session('menu');
-
-        $where['id'] = array('in',explode(',', $menuData));
-        $data = $db->where($where)->order('ordernum desc')->select();
-        $datac = $this->getParentMenu($data);
-        $data = array_merge($data,$datac);
+        $data = $this->get_fun_data();
         $menu = $this->formatMenu($ids,$data);
         return $menu;
     }

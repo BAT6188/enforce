@@ -7,6 +7,7 @@ class RoleController extends CommonController
     protected $models = ['role'=>'Enforce\Role',
                          'user'=>'Enforce\User'];
     protected $views = ['index'=>'role'];
+    protected $actions = ['menu'=>'Menu'];
     public function index()
     {
         $this->display($this->views['index']);
@@ -22,6 +23,9 @@ class RoleController extends CommonController
             $check['rolename'] = array('like','%'.$request['rolename'].'%');
         }
         $data = $this->get_role_info($check,$page,$rows);
+        foreach ($data['rows'] as &$value) {
+            $value['typename'] = $value['type'] == '0' ? u2g('管理者') : u2g('警员');
+        }
         $this->ajaxReturn(g2us($data));
     }
 
@@ -51,7 +55,7 @@ class RoleController extends CommonController
             $result['status']  = true;
         }else{
             $request['proleid'] = session('roleid');
-            $result = $db->getTableAdd($request);
+            $result = $db->getTableAdd(u2gs($request));
         }
         $this->ajaxReturn($result);
     }
@@ -61,8 +65,8 @@ class RoleController extends CommonController
         $request = I();
         $db = D($this->models['role']);
         $roles = explode(',',$request[$this->tab_id]);
-        if(in_array(1, (array)$roles) || in_array(2, (array)$roles)){
-            $result['message'] = '删除失败，无法删除系统内置的管理员或警员角色！';
+        if(in_array(1, (array)$roles)){
+            $result['message'] = '删除失败，无法删除系统内置的管理员！';
             $result['status']  = true;
             $this->ajaxReturn($result);
         }
@@ -88,18 +92,22 @@ class RoleController extends CommonController
         $result = $db->getTableEdit($where,$request);
         $this->ajaxReturn($result);
     }
-
+    //目标用户的权限 roleid
     public function roleMenu()
     {
         $request = I();
         $db = D($this->models['role']);
         $where[$this->tab_id] = $request[$this->tab_id];
         $menu = $db->where($where)->field('functionlist')->find();
-        //$menu = $db->where($where)->field('functionlist')->find();
-        echo $menu ? $menu['functionlist'] : '';
-        exit;
+        $menu = explode(',',$menu['functionlist']);
+        $clientUserMenus = A($this->actions['menu'])->get_fun_data();
+        $ids = [0];
+        $l_arr = ['id','name','pid','ordernum'];
+        $L_attributes = ['iconCls'=>'iconcls'];
+        $tree = $this->formatTree($ids,$clientUserMenus,$l_arr,$L_attributes,$menu);
+        $this->ajaxReturn(g2us($tree));
     }
-
+    //保存权限
     public function saveMenu()
     {
         $request = I();
