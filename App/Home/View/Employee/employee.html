@@ -31,10 +31,12 @@ app.tp.areaname = "{:$areaname}";
         <a href="javascript:void(0)" onclick="module.infoBar(2)" class="easyui-linkbutton" data-options="iconCls:'icon icon-edit',plain:true">修改</a>
         <a href="javascript:void(0)" onclick="module.remove()" class="easyui-linkbutton" data-options="iconCls:'icon icon-delete',plain:true">
         删除</a>
+        <a href="javascript:void(0)" onclick="module.allowAreaBar()" class="easyui-linkbutton" data-options="iconCls:'icon icon-basket_put',plain:true">权限分配</a>
     </div>
 <!-- 增加 -->
     <div id="dialog" class="easyui-dialog" title="添加" buttons="#addButtons"
     data-options="iconCls:'icon-add',resizable:true,modal:true,closed:true">
+        <p style="color: #0E2D5F;margin-left: 20px;">你即将向<sapn id="infoAreaname"></span></p>
         <form id="form" method="post" enctype="multipart/form-data">
             <div class="form_m" style="display: none"><div for="empid" class="form_label" >ID : </div>
                 <input class=" form_in easyui-textbox" type="text" name="empid" required="true" /></div>
@@ -75,4 +77,43 @@ app.tp.areaname = "{:$areaname}";
         <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
     $('#dialog').dialog('close')" style="width:90px">取消</a>
     </div>
+        <div id="otherdialog" class="easyui-dialog" id="otherInfo" title="权限查看" 
+        style="width:400px;height:400px;" data-options="closed:true" buttons="#buttons">
+        <form id="otherInfoForm">
+            <div class="form_m" style="display: none;">
+                <div for="empid" class="form_label">ID : </div>
+                <input class=" form_in easyui-textbox" type="text" name="empid" required="true"/>
+            </div>
+            <div class="form_m"><div for="bindingip" class="form_label">绑定IP : </div>
+                <select class=" easyui-combobox form_in" name="bindingip" id="bindingip"
+                    style="width: 181px;"
+                    data-options="editable:false,
+                                  onSelect:function(record){
+                                     if(record.value == 0){
+                                        $('#clientipDiv').hide();
+                                     }else{
+                                        $('#clientipDiv').show();
+                                     }
+                                  }">
+                    <option value="0">否</option>
+                    <option value="1">是</option>
+                </select>
+            </div>
+            <div class="form_m" style="display: none;" id="clientipDiv">
+                <div for="clientip" class="form_label">IP : </div>
+                <input class=" form_in easyui-textbox" type="text" name="clientip" id="clientip"/>
+            </div>
+        </form>
+        
+        <div style="padding-top: : 10px;padding-left: 50px;">
+            <p style="color: #0E2D5F">额外管理部门，只能为自身所属部门下的部门</p>
+            <p style="color: #0E2D5F">后端会自动排除多余的部门</p>
+            <ul id="areaList"></ul>
+        </div>
+    </div>  
+    <div id="buttons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="menu_sure" iconCls="icon-ok" onclick="module.allowOther()" style="width:90px">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
+            $('#otherdialog').dialog('close')" style="width:90px">取消</a>
+        </div>
 </block>

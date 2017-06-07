@@ -49,6 +49,20 @@ Tree.prototype.load_emp_tree = function(){
         }
     });
 }
+Tree.prototype.show_emp_manger_area = function(empid){
+    var dom = this.dom;
+    $.ajax({
+        url:app.url('Employee/show_emp_manger_area')+'?&rand='+Math.random(),
+        type:'get',
+        dataType:'json',
+        data:{
+            empid:empid
+        },
+        success:function(data){
+            $(dom).tree('loadData',data);
+        }
+    });
+}
 Tree.prototype.init = function(){
     $(this.dom).tree({
         animate:true,

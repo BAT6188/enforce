@@ -1,6 +1,6 @@
 //树的实例化
 var tree = new Tree('#area_list');
-
+var managerTree = new Tree('#areaList');
 var module = {};
 module.areaid = app.tp.areaid;
 module.areaname = app.tp.areaname;
@@ -9,6 +9,7 @@ module.clickTree = function(node){
     module.areaid = node.id;
     module.areaname = node.text;
     $('#mu_ser').html(module.areaname);
+    $('#infoAreaname').html('*'+module.areaname+'*添加/修改添加警员！');
     module.search();
 }
 //基本的搜索
@@ -36,8 +37,8 @@ module.infoBar = function(type){
     }
     //添加
     if(type == 1){
-        var info = {areaid:module.areaid};
-        $('#form').form('clear');
+        var info = {areaid:module.areaid,name:'',code:'',phone:'',remark:'',email:''};
+        //$('#form').form('clear');
         $('#form').form('load',info);
     }
     //修改
@@ -48,29 +49,30 @@ module.infoBar = function(type){
             return false;
         }
         //加载数据
+        infos[0].photo = infos[0].photo_path;
         $('#form').form('load',infos[0]);
     }
     $('#dialog').dialog('open');
 }
 module.changeinfo = function(){
-    var params = app.serializeJson('#form');
-    var formData = new FormData();
-        formData.append('file', $("#form input[name='photo']")[0].files[0]);
-    console.log(formData);
-    return false;
-    //增加 删除ID
-    if(module.actionType == 1){
-        delete(params.empid);
-        var requestUrl = app.url('Employee/dataAdd');
-    }else{
-        var requestUrl = app.url('Employee/dataEdit');
-    }
-    $.ajax({
+    var requestUrl = module.actionType == 1 ? app.url('Employee/dataAdd') : app.url('Employee/dataEdit');
+    $('#form').form('submit',{
         url:requestUrl,
-        type:'post',
-        dataType:'json',
-        data:params,
+        onSubmit:function(param){
+            if(module.actionType == 1) delete(param.empid);
+            //console.log(param.photo);
+            var photo = $("#form input[name='photo']").val();
+            if(photo != ''){
+                var photoArr = photo.split('.');
+                var type = photoArr[photoArr.length-1];
+                if(type != 'jpg'){
+                    $.messager.alert('上传提示','上传图片仅支持jpg格式','info');
+                    return false;
+                }
+            }
+        },
         success:function(data){
+            data = eval('('+data+')');
             $.messager.alert('结果提示',data.message,'info');
             $('#dialog').dialog('close');
             $('#datagrid').datagrid('reload',{
@@ -82,11 +84,11 @@ module.changeinfo = function(){
             $('#dialog').dialog('close');
             $.messager.alert('操作提示','网络故障','info');
         }
-    })
+    });
 }
 module.remove = function(){
     var infos = $('#datagrid').datagrid('getSelections');
-    if(infos.length = 0) return false;
+    if(infos.length == 0) return false;
     var ids = [];
     $.each(infos,function(n,m){
         var id= m.empid;
@@ -109,8 +111,56 @@ module.remove = function(){
                 areaid:module.areaid,
                 rand:Math.random()
             });
+        },
+        error:function(data){
+            $('#dialog').dialog('close');
+            $.messager.alert('操作提示','网络故障','info');
         }
     });
+}
+module.allowAreaBar = function(){
+    var rowData = $('#datagrid').datagrid('getSelections');
+    if(rowData.length != 1){
+        $.messager.alert('操作提示','请选择一个警员进行权限分配','info');
+            return false;
+    }
+    rowData = rowData[0];
+    var empid = rowData.empid;
+    managerTree.init();
+    managerTree.show_emp_manger_area(empid);
+    $(managerTree.dom).tree({
+        checkbox:true
+    });
+    $('#otherInfoForm').form('load',rowData);
+    $("#clientip").combobox('readonly',false);
+    $("#bindingip").textbox('readonly',false);
+    $('#menu_sure').show();
+    $('#otherdialog').dialog('open');
+}
+module.allowOther = function(){
+    var params = app.serializeJson('#otherInfoForm');
+    var areas = $(managerTree.dom).tree('getChecked');
+    if(areas.length>0){
+        var ids=[];
+        for(var i=0;i<areas.length;i++){
+            ids.push(areas[i].id);
+        }
+        var userarea = ids.join(',');
+        params.userarea = userarea;
+    }
+    $.ajax({
+            type:'post',
+            url:app.url('Employee/save_other_info'),
+            data:params,
+            dataType:'json',
+            success:function(result){
+                $.messager.alert('操作提示',result.message,'info');
+                $('#otherdialog').dialog('close');
+                $('#datagrid').datagrid('reload',{
+                    rand:Math.random()
+                });
+            }
+        });
 }
 $(function(){
     //树的初始化
@@ -120,6 +170,7 @@ $(function(){
     $(tree.dom).tree({
         onClick:module.clickTree
     });
+    $('#infoAreaname').html('*'+module.areaname+'*添加/修改添加警员！');
     $('#mu_ser').html(module.areaname);
     $('#datagrid').datagrid({
         url:app.url('Employee/dataList'),
@@ -127,6 +178,22 @@ $(function(){
         queryParams:{
             areaid:module.areaid,
             rand:Math.random()
+        },
+        onClickCell:function(r,f,v){
+            if(f=='otherInfo'){
+                var rowData = $(this).datagrid('getData').rows[r];
+                var empid = rowData.empid;
+                managerTree.init();
+                managerTree.show_emp_manger_area(empid);
+                $(managerTree.dom).tree({
+                    checkbox:true
+                });
+                $('#otherInfoForm').form('load',rowData);
+                $("#clientip").combobox('readonly',true);
+                $("#bindingip").textbox('readonly',true);
+                $('#menu_sure').hide();
+                $('#otherdialog').dialog('open');
+            }
         },
         title:'警员列表',
         fitColumns:true,

@@ -80,37 +80,42 @@ class EmployeeController extends CommonController
     public function dataAdd()
     {
         $request = I();
+        if($_FILES['photo']['name']){
+            $res = $this->save_image($_FILES['photo']);
+            if($res){
+                $request['photo_path'] = $res;
+            }else{
+                $info = '照片保存失败，可能原因服务器权限不足，';
+            }
+        }
         $request['password'] = I('code');           //登录密码 默认为警号
         $db = D($this->models['employee']);
+        if($db->where('code ='.$request['code'])->find()){
+            $result['message'] = '该警员已经录入！';
+            exit(json_encode($result));
+        }
         $c_area = explode(',', session('userarea'));
         if(in_array($request['areaid'],$c_area)){
             $result = $db->getTableAdd(u2gs($request));
         }else{
             $result['message'] = '对不起，你无法向该部门添加警员！因为该部门不在你的管辖范围，或者不全在管辖范围';
         }
-        $this->ajaxReturn($result);
+        if($info)  $result['message'] .= $info;
+        exit(json_encode($result));
     }
     //删除事件
     public function dataRemove()
     {
         $request = I();
         $db = D($this->models['employee']);
+        if($request[$this->tab_id] == ''){
+            $result['message'] = '删除数据不能为空';
+            $this->ajaxReturn($result);
+        }
         $where = $this->tab_id.' in('.$request[$this->tab_id].')';
-        //关联表
-        $emph_db = D($this->photo_tab);
-        $phlib_db = D($this->photolib_tab);
-        $employeephoids = $emph_db->where($where)->getField('employeephoid',true);
-        if(!empty($employeephoids)){
-            //删除$this->photolib_tab $this->photo_tab相关数据
-            $requests['employeephoid'] = array('in',$employeephoids);
-            $phlib_db->where($requests)->delete();
-
-            $photos = $emph_db->where($where)->getField('photo',true);
-            foreach ($photos as $value) {
-                $removeImage = $this->parse_file($value);
-                unlink($removeImage);
-            }
-            $emph_db->where($where)->delete();
+        $photos = $db->where($where)->getField('photo_path',true);
+        foreach ($photos as  $photo) {
+            unlink('./Public/'.$photo);
         }
         //删除初始表数据
         $result = $db->getTableDel($where);
@@ -120,12 +125,25 @@ class EmployeeController extends CommonController
     public function dataEdit()
     {
         $request = I();
-        $request = u2gs($request);
         $db = D($this->models['employee']);
+        if($_FILES['photo']['name']){
+            $res = $this->save_image($_FILES['photo']);
+            if($res){
+                $request['photo_path'] = $res;
+                //照片更新时删除原来的照片
+                $photoPath = $db->where('empid = '.$request['empid'])->getField('photo_path');
+                unlink('./Public/'.$photoPath);
+            }else{
+                $info = '照片保存失败，可能原因服务器权限不足，';
+            }
+        }
+        $request = u2gs($request);
+        
         $where[$this->tab_id] = $request[$this->tab_id];
         unset($request[$this->tab_id]);
         $result = $db->getTableEdit($where,$request);
-        $this->ajaxReturn($result);
+        if($info)  $result['message'] .= $info;
+        exit(json_encode($result));
     }
     //准备前端页面数据
     public function assignInfo()
@@ -142,81 +160,70 @@ class EmployeeController extends CommonController
         $info['roleJson'] = json_encode($info['role']);
         $this->assign('info',$info);
     }
-//上传图片
-    public function uplaodImg()
-    {
-        $data = I();
-        $num = count($_FILES['photo']['name']);
-        $emph_db = D($this->photo_tab);
-        $phlib_db = D($this->photolib_tab);
-        $emph_data['empid'] = $data['empid'];
-
-        if($num <= 0 ) {
-            $result['message'] = '请选择图片再添加';
-            $this->ajaxReturn($result);
-            return false;
-        }
-        //检查能上传图片张数
-        $total = $emph_db->where($emph_data)->count();
-        if((int)((int)$total + (int)$num) > 5 ){
-            $maxNum = 5 - (int)$total;
-            $result['message'] = '图片上传失败，还能上传'.$maxNum.'张图片！';
-            $this->ajaxReturn($result);
-            return false;
-        }
-        //获取单文件信息
-        $images = array();
-        for ($i=0; $i < $num; $i++) {
-            $addIds[] = $emph_db->add($emph_data);
-            foreach ($_FILES['photo'] as $key => $value) {
-                $images[$i][$key] = $value[$i];
-            }
-
-        }
-        //保存图片信息
-        foreach ($images as $key => $value) {
-            $res = $this->save_image($value,$addIds[$key]);
-            if($res){
-                $where['employeephoid'] = $addIds[$key];
-                //'http://'.$_SERVER['SERVER_ADDR'].
-                $host = isset($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
-                $insertData['photo'] = 'http://'.$host.__ROOT__.'/Public/lib/'.$res;
-                $emph_db->where($where)->save($insertData);
-                $where['libid'] = $data['photolib'];
-                $where['libnum'] = -1;
-                $phlib_db->add($where);
-                $result['message'] = '图片上传成功';
-            }else{
-                $result['message'] = '图片上传失败，可能原因：文件类型错误，服务器权限问题！';
-            }
-        }
-        $this->ajaxReturn($result);
-    }
     /**
      * 保存图片
      * @param  array $file    包含图片的所有信息
-     * @param  int/string $imageId 保存图片的id
+     * @param  string $imagename 保存图片名
      * @return string          保存结果
      */
-    public function save_image($file,$imageId)
+    public function save_image($file,$imagename)
     {
         //2w张分目录
-        $subFileName = (int)((((int)$imageId-1) / 20000)+1);
         $upload = new \Think\Upload(); //实例化上传类
         $upload->maxSize = 3145728; //设置附件上传大小
-        $upload->exts = array('jpg', 'gif', 'png', 'jpeg'); //设置附件上传类型
+        $upload->exts = array('jpg', 'gif', 'png', 'jpeg','ico'); //设置附件上传类型
 
-        $upload->autoSub = true;
-        $upload->subName = (string)$subFileName; //设置上传子目录
+        $upload->autoSub = false;
+        //$upload->subName = ''; //设置上传子目录
         $upload->replace = true; //设置是否覆盖上传文件
-
-        $upload->saveName = $imageId; //设置上传文件名
-
-        $upload->rootPath = './Public/lib/'; //设置上传文件位置
+        //$upload->saveName = $imagename; //设置上传文件名
+        $upload->rootPath = './Public/upload/'; //设置上传文件位置
         //$upload->savePath = (string)$subName; // 设置附件上传目录
         // 上传文件
         $result = $upload->uploadOne($file);
-        return $result ? $result['savepath'].$result['savename'] : false;  //$upload->getError();
+        return $result ? 'upload/'.$result['savepath'].$result['savename'] : false;  //$upload->getError();
+    }
+    /**
+     * 显示警员管理的部门
+     * @param  int $empid 警员ID
+     * @return
+     */
+    public function show_emp_manger_area()
+    {
+        $empid  = I('empid');
+        $action = A($this->actions['area']);
+        $empdb = D($this->models['employee']);
+        $areaid = $empdb->where('empid='.$empid)->getField('areaid');
+        $careas = $action->carea($areaid);
+        $pareas = $action->parea($areaid);
+        $areas = array_merge($careas,$pareas);
+        $db = D($this->models['area']);
+        $where['areaid'] = array('in',$areas);
+        $areas = $db->where($where)->select();
+        $ids = array(0);
+        //$l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr
+        $l_arr = ['areaid','areaname','fatherareaid','areaid'];
+        //$L_attributes 额外需要保存的信息
+        //$L_attributes = ['arearcode','rperson','rphone'];
+        $icons = ['icon-map_go','icon-map'];
+        $noclose = $db->where('fatherareaid = 0')->getField('areaid',true);
+        $checks = $empdb->where('empid='.$empid)->getField('userarea');
+        $checks = explode(',',$checks);
+        $data_tree = $this->formatTree($ids,$areas,$l_arr,'',$checks,$icons,$noclose);
+        $this->ajaxReturn(g2us($data_tree));
+    }
+    /**
+     * 保存员工的权限信息
+     * @param  
+     * @return
+     */
+    public function save_other_info()
+    {
+        $request = I();
+        //如果分配区域
+        if($request['userarea']){
+            
+        }
     }
     //获取员工图片
     public function get_empImages()
