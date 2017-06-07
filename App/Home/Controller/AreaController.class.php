@@ -14,13 +14,18 @@ class AreaController extends CommonController
     protected $views = ['index'=>'area'];
     public function index()
     {
-        $this->assignInfo();
+        $areaTree = $this->tree_list();
+        $rootId = !empty($areaTree) ? $areaTree[0]['id'] : 0;
+        $rootName = !empty($areaTree) ? g2u($areaTree[0]['text']) : '系统根部门';
+        $this->assign('areaid',$rootId);
+        $this->assign('areaname',$rootName);
         $this->display($this->views['index']);
     }
 
     public function dataList()
     {
         $request = I();
+        $request = u2gs($request);
         $page = I('page');
         $rows = I('rows');
         unset($request['page'],$request['rows'],$request['rand']);
@@ -46,6 +51,10 @@ class AreaController extends CommonController
         if(!empty($all_list)){
             $order = 'areaid asc';
             $data = $db->getTableList($check,$page,$rows,$order);
+            $areas = $db->getField('areaid,areaname');
+            foreach ($data['rows'] as &$value) {
+                $value['pareaname'] = array_key_exists($value['fatherareaid'], $areas) ? $areas[$value['fatherareaid']] : u2g('系统根区域');
+            }
         }
         $this->ajaxReturn(g2us($data));
     }
@@ -55,7 +64,7 @@ class AreaController extends CommonController
         $request = I();
         $db = D($this->models['area']);
         $userarea = $this->userarea();
-        $result = $db->getTableAdd($request);
+        $result = $db->getTableAdd(u2gs($request));
         $add_area = $result['add_id'];
         //增加时将所有自身,父用户添加相关区域
         $link_db = D($this->models['user']);
@@ -122,19 +131,8 @@ class AreaController extends CommonController
         $db = D($this->models['area']);
         $where[$this->tab_id] = $request[$this->tab_id];
         unset($request[$this->tab_id]);
-        $result = $db->getTableEdit($where,$request);
+        $result = $db->getTableEdit($where,u2gs($request));
         $this->ajaxReturn($result);
-    }
-
-    public function assignInfo()
-    {
-        $db = D($this->models['areapro']);
-        $info['areapro'] = g2us($db->select());
-        $info['proJson'] = json_encode($info['areapro']);
-        $db = D($this->models['area']);
-        $info['areareg'] = g2us($db->select());
-        $info['arearegJson'] = json_encode($info['areareg']);
-        $this->assign('info',$info);
     }
     //获取自身展示部门
     public function all_user_area()
@@ -164,6 +162,7 @@ class AreaController extends CommonController
      */
     public function tree_list()
     {
+        $db = D($this->models['area']);
         $data = $this->all_user_area();
         $ids = array(0);
         //$l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr

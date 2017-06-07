@@ -18,6 +18,7 @@ class RoleController extends CommonController
         $request = I();
         $page = I('page');
         $rows = I('rows');
+        $request = u2gs($request);
         //$where = $request['rolename'] ? 'rolename like \'%'.$request['rolename'].'%\'' : null;
         if($request['rolename']){
             $check['rolename'] = array('like','%'.$request['rolename'].'%');
@@ -89,7 +90,7 @@ class RoleController extends CommonController
         $db = D($this->models['role']);
         $where[$this->tab_id] = $request[$this->tab_id];
         unset($request[$this->tab_id]);
-        $result = $db->getTableEdit($where,$request);
+        $result = $db->getTableEdit($where,u2gs($request));
         $this->ajaxReturn($result);
     }
     //目标用户的权限 roleid

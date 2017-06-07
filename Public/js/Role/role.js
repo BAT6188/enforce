@@ -36,9 +36,10 @@ things.editBar = function(){
         $('#editDialog').dialog('open');
     }
 }
-things.change_info = function(form,url){
+things.change_info = function(form,url,dialog){
     var params = app.serializeJson(form);
-    if(!$('#addForm').form('validate')){
+    if(!$(form).form('validate')){
+        $.messager.alert('操作提示','有未满足条件的选项，无法提交','info');
         return false;
     }
     $.ajax({
@@ -47,20 +48,20 @@ things.change_info = function(form,url){
         dataType:'json',
         data:params,
         success:function(data){
-            $('#addDialog').dialog('close');
+            $(dialog).dialog('close');
             things.callback(data);
         },
         error:function(data){
-            $('#addDialog').dialog('close');
-            $.meassager.alert('操作提示','网络故障','info');
+            $(dialog).dialog('close');
+            $.messager.alert('操作提示','网络故障','info');
         }
     });
 }
 things.add = function(){
-    things.change_info('#addForm',things.addUrl);
+    things.change_info('#addForm',things.addUrl,'#addDialog');
 }
 things.edit = function(){
-    things.change_info('#editForm',things.editUrl);
+    things.change_info('#editForm',things.editUrl,'#editDialog');
 }
 things.remove = function(){
     var infos = $('#datagrid').datagrid('getSelections');
@@ -177,7 +178,6 @@ $(function(){
             if(f=='functionlist'){
                 var rowData = $(this).datagrid('getData').rows[r];
                 var roleid = rowData.roleid;
-                //console.log(userid);
                 $('#menuDialog').dialog('setTitle','权限查看').dialog('open');
                 $('#menuList').tree('reload');
                 $('#menu_sure').hide();

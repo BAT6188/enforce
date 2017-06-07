@@ -18,6 +18,7 @@ class UserController extends CommonController
     public function dataList()
     {
         $request = I();
+        $request = u2gs($request);
         $page = I('page');
         $rows = I('rows');
         $db = D($this->models['user']);
@@ -38,10 +39,10 @@ class UserController extends CommonController
 
         $data = $db->getTableList($check,$page,$rows);
         //对与数据转换 找到统一办法后解决
-        /*$roles = D($this->models['role'])->getField('roleid,rolename');
+        $roles = D($this->models['role'])->getField('roleid,rolename');
         foreach ($data['rows'] as &$value) {
-            $value['roleid'] = $roles[$value['roleid']];
-        }*/
+            $value['rolename'] = array_key_exists($value['roleid'], $roles) ? $roles[$value['roleid']] : u2g('未知');
+        }
         $this->ajaxReturn(g2us($data));
     }
 
@@ -51,11 +52,11 @@ class UserController extends CommonController
         $db = D($this->models['user']);
         $request['fatherid'] = session('userid');
         $where['username'] = $request['username'];
-        if($db->checkExistence($where)){
+        if($db->checkExistence(u2gs($where))){
             $result['message'] = '用户已存在！换一个吧';
             $result['status']  = true;
         }else{
-            $result = $db->getTableAdd($request);
+            $result = $db->getTableAdd(u2gs($request));
         }
         $this->ajaxReturn($result);
     }
@@ -75,7 +76,7 @@ class UserController extends CommonController
         $db = D($this->models['user']);
         $where[$this->tab_id] = $request[$this->tab_id];
         unset($request[$this->tab_id]);
-        $result = $db->getTableEdit($where,$request);
+        $result = $db->getTableEdit($where,u2gs($request));
         $this->ajaxReturn($result);
     }
 
@@ -84,7 +85,7 @@ class UserController extends CommonController
         $db = D($this->models['role']);
         $where['roleid'] = session('roleid');
         $data = $db->where($where)->select();
-        $l_arr = [0=>'roleid',1=>'proleid'];
+        $l_arr = ['roleid','proleid'];
         $info_f = $this->getChData($data,$this->models['role'],$l_arr);
         //添加修改时没有本级
         $info_f = g2us($info_f);
@@ -94,7 +95,18 @@ class UserController extends CommonController
         $info['roleJson'] = json_encode($info_f);
         $this->assign('info',$info);
     }
-
+    //获取登录用户能够添加的角色
+    public function get_roles()
+    {
+        $db = D($this->models['role']);
+        $where['roleid'] = session('roleid');
+        $data = $db->where($where)->select();
+        $l_arr = ['roleid','proleid'];
+        $info_f = $this->getChData($data,$this->models['role'],$l_arr);
+        //添加修改时没有本级
+        $info_f = g2us($info_f);
+        $this->ajaxReturn($info_f);
+    }
     public function savearea()
     {
         $request = I();
@@ -114,7 +126,19 @@ class UserController extends CommonController
     public function userarea()
     {
         $request = I();
-        echo $this->m_userarea($request[$this->tab_id]);
+        $action = A($this->actions['area']);
+        //登录用户展示的区域
+        $areas = $action->all_user_area();
+        //目标用户的管理区域
+        $moodUserAeras = explode(',',$this->m_userarea($request[$this->tab_id]));
+        $db = D($this->models['area']);
+        $ids = array(0);
+        //$l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr
+        $l_arr = ['areaid','areaname','fatherareaid','areaid'];
+        $icons = ['icon-map_go','icon-map'];
+        //$noclose = $db->where('fatherareaid = 0')->getField('areaid',true);
+        $data_tree = $this->formatTree($ids,$areas,$l_arr,'',$moodUserAeras,$icons);
+        $this->ajaxReturn(g2us($data_tree));
     }
     /**
      * 获取当前用户的管理区域
@@ -122,7 +146,6 @@ class UserController extends CommonController
      */
     public function s_userarea()
     {
-
         $s_userarea = $this->m_userarea(session('userid'));
         if($s_userarea!=''){
             $s_userarea = explode(',', $s_userarea);

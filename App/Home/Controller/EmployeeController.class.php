@@ -7,7 +7,8 @@ class EmployeeController extends CommonController
     protected $tab_id = 'empid';
     protected $models = ['employee'=>'Enforce\Employee',    //警员
                          'area'=>'Enforce\AreaDep'];           //部门
-    protected $actions = ['area'=>'Area'];
+    protected $actions = ['area'=>'Area',
+                          'role'=>'Role'];
     protected $views = ['index'=>'employee'];
     //展示
     public function index()
@@ -19,6 +20,7 @@ class EmployeeController extends CommonController
         $rootName = !empty($areaTree) ? g2u($areaTree[0]['text']) : '系统根部门';
         $this->assign('areaid',$rootId);
         $this->assign('areaname',$rootName);
+        $this->assignInfo();
         $this->display($this->views['index']);
     }
    	public function showPhoto(){
@@ -38,6 +40,7 @@ class EmployeeController extends CommonController
     public function dataList()
     {
         $request = I();
+        $request = u2gs($request);
         $page = I('page');
         $rows = I('rows');
         unset($request['page'],$request['rows'],$request['rand']);
@@ -81,7 +84,7 @@ class EmployeeController extends CommonController
         $db = D($this->models['employee']);
         $c_area = explode(',', session('userarea'));
         if(in_array($request['areaid'],$c_area)){
-            $result = $db->getTableAdd($request);
+            $result = $db->getTableAdd(u2gs($request));
         }else{
             $result['message'] = '对不起，你无法向该部门添加警员！因为该部门不在你的管辖范围，或者不全在管辖范围';
         }
@@ -117,6 +120,7 @@ class EmployeeController extends CommonController
     public function dataEdit()
     {
         $request = I();
+        $request = u2gs($request);
         $db = D($this->models['employee']);
         $where[$this->tab_id] = $request[$this->tab_id];
         unset($request[$this->tab_id]);
@@ -127,12 +131,14 @@ class EmployeeController extends CommonController
     public function assignInfo()
     {
         $db = D($this->models['area']);
-        $info['areareg'] = $db->listAll();
-        $info['arearegJson'] = json_encode($info['areareg']);
-        $action = A('Rolereg');
+        $info['areareg'] = $db->select();
+        $info['areareg'] = g2us($info['areareg']);
+        $info['arearegJson'] = json_encode(g2us($info['areareg']));
+        $action = A($this->actions['role']);
         $check['type'] = 1;
         //警员记录
         $info['role'] = $action->get_role_info($check)['rows'];
+        $info['role'] = g2us($info['role']);
         $info['roleJson'] = json_encode($info['role']);
         $this->assign('info',$info);
     }
