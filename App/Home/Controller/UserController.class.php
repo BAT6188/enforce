@@ -9,6 +9,7 @@ class UserController extends CommonController
     protected $actions = ['user'=>'User',
                           'area'=>'Area'];
     protected $views = ['index'=>'user'];
+    protected $logContent = '系统管理/用户管理';
     public function index()
     {
         $this->assignInfo();
@@ -58,6 +59,7 @@ class UserController extends CommonController
         }else{
             $result = $db->getTableAdd(u2gs($request));
         }
+        $this->write_log('添加'.$request['username'],$this->logContent);
         $this->ajaxReturn($result);
     }
 
@@ -67,6 +69,7 @@ class UserController extends CommonController
         $db = D($this->models['user']);
         $where = $this->tab_id.' in('.$request[$this->tab_id].')';
         $result = $db->getTableDel($where);
+        $this->write_log('删除用户',$this->logContent);
         $this->ajaxReturn($result);
     }
 

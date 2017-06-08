@@ -25,29 +25,14 @@ class DevController extends CommonController
         $request['cpxh']    = I('cpxh');        //产品序号
         $request['jyxm']    = I('jyxm');        //警员姓名
         $request['areaid']  = I('areaid','');      //部门ID
-        $codes = array();
-        if($request['areaid'] != ''){
-            $action = A($this->actions['area']);
-            $areas = $action->carea($request['areaid']);
-            //实际管理区域
-            $reallyareas = array_intersect(explode(',', session('userarea')),$areas);
-            $where['areaid'] = array('in',$reallyareas));
-            $db = D($this->models['employee']);
-            $codes = $db->where($where)->getField('code',true);
-        }
+        $request['status']  = I('status',false);
         $page = I('page');
         $rows = I('rows');
         $db =  D($this->models['pebase']);
         //获取能显示的执法仪信息
         $action = A($this->actions['employee']);
-        $emps = $action->get_manger_emp();
-        $allowCodes = array();
-        foreach ($emps as $emp) {
-            $allowCodes[] = $emp['code'];      //警员编号
-        }
-        if(!empty($codes)){
-            $allowCodes = array_intersect($allowCodes,$codes);
-        }
+        $emps = $action->get_manger_emp($request['areaid']);
+        $allowCodes = array_keys($emps);
         if(!empty($allowCodes)){
             $where['jybh'] = array('in',$allowCodes);
         }else{
@@ -62,16 +47,18 @@ class DevController extends CommonController
             }
         }
         $data = $db->getTableList(u2gs($where),$page,$rows);
-        $cpxhs = array();
-        foreach ($data['rows'] as $value) {
-            $cpxhs[] = $value['cpxh'];
+        //是否需要执法记录仪状态
+        if($request['status']){
+            $cpxhs = array();
+            foreach ($data['rows'] as $value) {
+                $cpxhs[] = $value['cpxh'];
+            }
+            $res = $this->get_pe_base_status($cpxhs);
+            //$this->ajaxReturn($res);
+            foreach ($data['rows'] as &$value) {
+                $value['status'] = $res[$value['cpxh']];       //0:停用 1:使用率底 2:活跃
+            }
         }
-        $res = $this->get_pe_base_status($cpxhs);
-        //$this->ajaxReturn($res);
-        foreach ($data['rows'] as &$value) {
-            $value['status'] = $res[$value['cpxh']];       //0:停用 1:使用率底 2:活跃
-        }
-
         $this->ajaxReturn(g2us($data));
     }
     //执法记录仪

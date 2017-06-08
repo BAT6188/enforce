@@ -8,6 +8,7 @@ class RoleController extends CommonController
                          'user'=>'Enforce\User'];
     protected $views = ['index'=>'role'];
     protected $actions = ['menu'=>'Menu'];
+    protected $logContent = '系统管理/角色管理';
     public function index()
     {
         $this->display($this->views['index']);
@@ -58,6 +59,7 @@ class RoleController extends CommonController
             $request['proleid'] = session('roleid');
             $result = $db->getTableAdd(u2gs($request));
         }
+        $this->write_log('添加'.$request['rolename'],$this->logContent);
         $this->ajaxReturn($result);
     }
 
@@ -81,6 +83,7 @@ class RoleController extends CommonController
             $where = $this->tab_id.' in('.$request[$this->tab_id].')';
             $result = $db->getTableDel($where);
         }
+        $this->write_log('删除角色',$this->logContent);
         $this->ajaxReturn($result);
     }
 

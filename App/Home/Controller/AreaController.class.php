@@ -13,6 +13,7 @@ class AreaController extends CommonController
     //控制器
     protected $actions = ['user'=>'User'];
     protected $views = ['index'=>'area'];
+    protected $logContent = '系统管理/部门管理';
     public function index()
     {
         $areaTree = $this->tree_list();
@@ -81,6 +82,7 @@ class AreaController extends CommonController
             $where['userid'] = $key;
             $link_db->getTableEdit($where,$data);
         }
+        $this->write_log('添加'.$request['areaname'],$this->logContent);
         $this->ajaxReturn($result);
     }
 
@@ -123,6 +125,7 @@ class AreaController extends CommonController
         }else{
             $result['message'] = '对不起,你没有权限删除这些部门';
         }
+        $this->write_log('删除部门',$this->logContent);
         $this->ajaxReturn($result);
     }
 

@@ -12,6 +12,7 @@ class EmployeeController extends CommonController
                           'user'=>'User'];
     protected $views = ['index'=>'employee',
                         'showEmpPhoto'=>'showEmpPhoto'];
+    protected $logContent = '系统管理/警员管理';
     //展示
     public function index()
     {
@@ -37,21 +38,44 @@ class EmployeeController extends CommonController
         $this->display($this->views['showEmpPhoto']);
    	}
     /**
-     * 获取登录用户管理警员的信息
-     * @param  string $info empid,name,code
+     * 获取登录用户管理警员的信息 若带有部门id则检索出最终能管理的警员
+     * @param  string $areaid 部门ID
      * @return array
      */
-    public function get_manger_emp()
+    public function get_manger_emp($areaid='')
     {
         $where['areaid'] = array('in',explode(',',session('userarea')));
         $db = D($this->models['employee']);
-        $data = $db->where($where)->getField('empid,name,code');
+        $data = $db->where($where)->getField('code',true);
+        //如果是警员用户 加上自身的信息
         if(session('code')){
-            $data[session('empid')] = ['empid'=>session('empid'),
-                                        'name'=>u2g(session('user')),
-                                        'code'=>session('code')];
+            $data[] = session('code');
         }
-        return $data;
+        //如果有部门ID  进行检索 找出最终能显示的警员信息
+        if($areaid != ''){
+            $action = A($this->actions['area']);
+            //加上检索部门
+            $areas = $action->carea($areaid);
+            //实际管理部门
+            $reallyareas = array_intersect(explode(',', session('userarea')),$areas);
+            if(!empty($reallyareas)){
+                $where['areaid'] = array('in',$reallyareas);
+                $db = D($this->models['employee']);
+                $codes = $db->where($where)->getField('code',true);
+            }
+        }
+        if(isset($codes) && !empty($codes)){
+            //检索出来的，与实际能管理的
+            $data = array_intersect($codes,$data);
+        }
+        $request['code'] = array('in',$data);
+        //最终的警员信息
+        if(!empty($data)){
+            $res = $db->where($request)->getField('code,empid,name');
+        }else{
+            $res = array();
+        }
+        return $res;
     }
     //数据获取
     public function dataList()
@@ -118,6 +142,7 @@ class EmployeeController extends CommonController
             $result['message'] = '对不起，你无法向该部门添加警员！因为该部门不在你的管辖范围，或者不全在管辖范围';
         }
         if($info)  $result['message'] .= $info;
+        $this->write_log('添加'.$request['name'],$this->logContent);
         exit(json_encode($result));
     }
     //删除事件
@@ -136,6 +161,7 @@ class EmployeeController extends CommonController
         }
         //删除初始表数据
         $result = $db->getTableDel($where);
+        $this->write_log('删除警员',$this->logContent);
         $this->ajaxReturn($result);
     }
     //编辑事件

@@ -12,7 +12,8 @@ class MediaController extends CommonController
                          'area'=>'Enforce\AreaDep'];           //部门
     protected $actions = ['area'=>'Area',
                           'role'=>'Role',
-                          'user'=>'User'];
+                          'user'=>'User',
+                          'employee'=>'Employee'];
     protected $views = ['index'=>'employee',
                         'showEmpPhoto'=>'showEmpPhoto'];
     /**
@@ -25,5 +26,13 @@ class MediaController extends CommonController
         $db = D($this->models['pe_video_list']);
         $num = $db->where($where)->count('wjbh');
         return $num;
+    }
+    public function init_media_info()
+    {
+        $request['areaid']  = I('areaid','');      //部门ID
+        //获取能显示的警员
+        $action = A($this->actions['employee']);
+        $emps = $action->get_manger_emp($request['areaid']);
+        $allowCodes = array_keys($emps);
     }
 }

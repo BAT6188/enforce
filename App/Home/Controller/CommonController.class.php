@@ -199,4 +199,20 @@ class CommonController extends Controller {
         }
         return  $easyuiTree;
     }
+    /**
+     * 写日志
+     * @param  string $action 操作事件 详细内容
+     * @param  string $moudle 菜单
+     * @return viod         
+     */
+    public function write_log($action,$moudle)
+    {
+        $data['dte'] = date('Y-m-d H:i:s');
+        $data['name'] = u2g(session('user'));
+        $data['moudle'] = u2g($moudle);
+        $ip = get_client_ip();
+        $data['cmt'] = u2g($action.'('.$ip.')');
+        $db = D('Enforce\SysLog');
+        $db->add($data);
+    }
 }
