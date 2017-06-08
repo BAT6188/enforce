@@ -8,8 +8,10 @@ class EmployeeController extends CommonController
     protected $models = ['employee'=>'Enforce\Employee',    //警员
                          'area'=>'Enforce\AreaDep'];           //部门
     protected $actions = ['area'=>'Area',
-                          'role'=>'Role'];
-    protected $views = ['index'=>'employee'];
+                          'role'=>'Role',
+                          'user'=>'User'];
+    protected $views = ['index'=>'employee',
+                        'showEmpPhoto'=>'showEmpPhoto'];
     //展示
     public function index()
     {
@@ -23,19 +25,34 @@ class EmployeeController extends CommonController
         $this->assignInfo();
         $this->display($this->views['index']);
     }
-   	public function showPhoto(){
-   		$ucTab = ucwords($this->tab);
-        $url['datagridUrl'] = U($ucTab.'/dataList');
-        $url['addUrl'] = U($ucTab.'/dataAdd');
-        $url['editUrl'] = U($ucTab.'/dataEdit');
-        $url['removeUrl'] = U($ucTab.'/dataRemove');
-        $url['uplaodImgUrl'] = U($ucTab.'/uplaodImg');
-        $url['get_empImagesUrl'] = U($ucTab.'/get_empImages');
-        $url['removeImageUrl'] = U($ucTab.'/removeImage');
-        $this->assign('url',$url);
+   	public function showEmpPhoto(){
+   		$action = A($this->actions['area']);
+        //如果没有
+        $areaTree = $action->tree_list();
+        $rootId = !empty($areaTree) ? $areaTree[0]['id'] : 0;
+        $rootName = !empty($areaTree) ? g2u($areaTree[0]['text']) : '系统根部门';
+        $this->assign('areaid',$rootId);
+        $this->assign('areaname',$rootName);
         $this->assignInfo();
-        $this->display('showPhoto');
+        $this->display($this->views['showEmpPhoto']);
    	}
+    /**
+     * 获取登录用户管理警员的信息
+     * @param  string $info empid,name,code
+     * @return array
+     */
+    public function get_manger_emp()
+    {
+        $where['areaid'] = array('in',explode(',',session('userarea')));
+        $db = D($this->models['employee']);
+        $data = $db->where($where)->getField('empid,name,code');
+        if(session('code')){
+            $data[session('empid')] = ['empid'=>session('empid'),
+                                        'name'=>u2g(session('user')),
+                                        'code'=>session('code')];
+        }
+        return $data;
+    }
     //数据获取
     public function dataList()
     {
@@ -66,13 +83,13 @@ class EmployeeController extends CommonController
         foreach ($info_f as  $info_c) {
             $all_list[] = $info_c['areaid'];
         }
-        //实际管理区域
+        //实际管理部门
         $c_area = explode(',', session('userarea'));
         $all_list = array_intersect($c_area, $all_list);
         $check['areaid'] = array('in',$all_list);
         $data = $db->getTableList($check,$page,$rows);
         foreach ($data['rows'] as &$value) {
-            $value['areaname'] = array_key_exists($value['areaid'],$areas) ? $areas[$value['areaid']]  : u2g('系统根区域');
+            $value['areaname'] = array_key_exists($value['areaid'],$areas) ? $areas[$value['areaid']]  : u2g('系统根部门');
         }
         $this->ajaxReturn(g2us($data));
     }
@@ -138,7 +155,7 @@ class EmployeeController extends CommonController
             }
         }
         $request = u2gs($request);
-        
+
         $where[$this->tab_id] = $request[$this->tab_id];
         unset($request[$this->tab_id]);
         $result = $db->getTableEdit($where,$request);
@@ -195,7 +212,7 @@ class EmployeeController extends CommonController
         $empdb = D($this->models['employee']);
         $areaid = $empdb->where('empid='.$empid)->getField('areaid');
         $careas = $action->carea($areaid);
-        $pareas = $action->parea($areaid);
+        $pareas = $action->parea($areaid,true);
         $areas = array_merge($careas,$pareas);
         $db = D($this->models['area']);
         $where['areaid'] = array('in',$areas);
@@ -214,92 +231,84 @@ class EmployeeController extends CommonController
     }
     /**
      * 保存员工的权限信息
-     * @param  
+     * @param
      * @return
      */
     public function save_other_info()
     {
         $request = I();
-        //如果分配区域
+        $in_fact_areas = '';
+        //如果分配部门
         if($request['userarea']){
-            
+            //用户所属部门的下级部门
+            $empid  = I('empid');
+            $action = A($this->actions['area']);
+            $empdb = D($this->models['employee']);
+            $areaid = $empdb->where('empid='.$empid)->getField('areaid');
+            $careas = $action->carea($areaid,true);
+            if(empty($careas)){
+                $message = ',经权限核验，该警员并没有可管理下级部门';
+            }else{
+                //登录用户的管理权限
+                $action = A($this->actions['user']);
+                $userareas = $action->s_userarea();
+                $fontareas = explode(',',$request['userarea']);
+                //计算出 前端传值与登录用户和警员所属部门的交集等到最终的结果
+                $mangerAreas = array_intersect($fontareas,$userareas,$careas);
+                if(empty($mangerAreas)){
+                    $message = ',经权限核验，该警员并没有可管理下级部门';
+                }else{
+                    $in_fact_areas = implode(',',$mangerAreas);
+                }
+            }
         }
-    }
-    //获取员工图片
-    public function get_empImages()
-    {
-        $empid = I('empid');
-        $emph_db = D($this->photo_tab);
-        $where['empid'] = $empid;
-        $res = $emph_db->where($where)
-             ->join($this->photolib_tab.' ON '.$this->photo_tab.'.employeephoid = '.$this->photolib_tab.'.employeephoid')
-             ->select();
-        $this->ajaxReturn($res);
-    }
-
-    public function removeImage()
-    {
-        $request = I();
-        $removeImage = $request['photo'];
-
-        $removeImage = $this->parse_file($removeImage);
-        $emph_db = D($this->photo_tab);
-        $phlib_db = D($this->photolib_tab);
-        $where = 'employeephoid in('.$request['employeephoid'].')';
-        $res = $emph_db->where($where)->delete();
-        $resu = $phlib_db->where($where)->delete();
-        if($res && $resu){
-            $result['message'] = '删除成功';
-            unlink($removeImage);
-        }else{
-            $result['message'] = '删除失败';
-        }
+        $db = D($this->models['employee']);
+        $data['userarea'] = $in_fact_areas;
+        $data['bindingip'] = $request['bindingip'];
+        $data['clientip'] = $request['clientip'];
+        $where['empid'] = $request['empid'];
+        $result = $db->getTableEdit($where,$request);
+        if(isset($message)) $result['message'] .= $message;
         $this->ajaxReturn($result);
     }
     /**
-     * 根据图片的http地址分析出本机图片地址
-     * @param  string $fileUrl 图片http地址
-     * @return string           本机图片地址
-     */
-    public function parse_file($fileUrl)
-    {
-        $removeImageArr = explode('/', $fileUrl);
-        unset($removeImageArr[0],$removeImageArr[1],$removeImageArr[2]);
-        $removeImage = '/'.implode('/', $removeImageArr);
-        return $_SERVER['CONTEXT_DOCUMENT_ROOT'].$removeImage;
-    }
-    /**
-     *
+     *获取带有警员的tree
      * @return
      */
     public function show_employee()
     {
         $empDb = D($this->models['employee']);
+
         //普通用户信息展示
         if(session('usertype') == 'normal'){
-            //当前用户的管理区域
+
+            //当前用户的管理部门
             $action = A($this->actions['area']);
             $userarea = $action->tree_list();    //easyui tree
-            //dump($userarea);
-            $c_area = explode(',', session('userarea'));        //实际管理区域
+            //实际管理部门
+            $c_area = explode(',', session('userarea'));
             $where['areaid'] = array('in',$c_area);
-
             $emps = $empDb->where($where)->select();
-            //dump($emps);
             $l_arr = ['areaid','empid','name'];
             $icon = 'icon-user';
             $empAreaTree = $this->add_other_info($userarea,$emps,$l_arr,$icon);
-            $this->ajaxReturn($empAreaTree);
+            $this->ajaxReturn(g2us($empAreaTree));
         }
         //警员信息展示
         if(session('usertype') == 'police'){
             $empInfo = $empDb->where($where)->find();
-            $nowareaid = $empInfo['areaid'];
+            //判断该警员是否拥有管理部门的权限
+            if($empInfo['userarea'] != ''){
+                $mangerareas = explode(',',$empInfo['userarea']);
+            }
+            $nowareaid = $mangerareas ? $mangerareas : array();
+            $nowareaid[] = $empInfo['areaid'];
             $areaDb = D($this->models['area']);
-            $request['areaid'] = $nowareaid;
+            $request['areaid'] = array('in',$nowareaid);
             $arearInfo = $areaDb->where($request)->select();
             $l_arr = ['areaid','fatherareaid'];
-            $areas = $this->getParentData($arearInfo,$this->link_tab,$l_arr);
+            //选出所有需要展示的部门
+            $areas = $this->getParentData($arearInfo,$this->models['area'],$l_arr);
             $areas[] = $arearInfo[0];
             $ids = array(0);
             //$l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr
@@ -308,13 +317,17 @@ class EmployeeController extends CommonController
             $L_attributes = ['arearcode','rperson','rphone'];
             $icons = ['icon-map_go','icon-map'];
             $data_tree = $this->formatTree($ids,$areas,$l_arr,$L_attributes,'',$icons);
-
-            //dump($emps);
+            $emps = array();
+            //所有需要显示的警员
+            if($mangerareas){
+                $where['areaid'] = array('in',$mangerareas);
+                $emps = $empDb->where($where)->select();
+            }
             $emps[] = $empInfo;
             $l_arr = ['areaid','empid','name'];
             $icon = 'icon-user';
             $empAreaTree = $this->add_other_info($data_tree,$emps,$l_arr,$icon);
-            $this->ajaxReturn($empAreaTree);
+            $this->ajaxReturn(g2us($empAreaTree));
         }
     }
 }

@@ -7,7 +7,8 @@ class AreaController extends CommonController
     //模型
     protected $models = ['area'=>'Enforce\AreaDep',
                          'user'=>'Enforce\User',
-                         'areapro'=>'Enforce\AreaPro'];
+                         'areapro'=>'Enforce\AreaPro',
+                         'employee'=>'Enforce\Employee'];
     protected $remove_link_tabs = ['employee'=>'Enforce\Employee'];    //删除部门时需要删除的警员
     //控制器
     protected $actions = ['user'=>'User'];
@@ -72,7 +73,7 @@ class AreaController extends CommonController
         $data['userarea'] = implode(',', $userarea);
         $where['userid'] = session('userid');
         $link_db->getTableEdit($where,$data);
-
+        //更新用户表
         $puserarea = $this->puserarea();
         foreach ($puserarea as $key => $value) {
             $value[] = $add_area;
@@ -241,16 +242,18 @@ class AreaController extends CommonController
     /**
      * 获取目标部门的子部门及自身
      * @param  int $areaid 目标部门
+     * @param  boolean $no_self 是否加上自身部门  true  否  false 是
      * @return array
      */
-    public function carea($areaid)
+    public function carea($areaid,$no_self=false)
     {
         $db = D($this->models['area']);
         $where['areaid'] = $areaid;
         $data = $db->where($where)->select();
         $l_arr = [0=>'areaid',1=>'fatherareaid'];
         $info_f = $this->getChData($data,$this->models['area'],$l_arr);
-        $info_f = array_merge($data,$info_f);
+        if(!$no_self) $info_f = array_merge($data,$info_f);
+
         $all_list = array();
         foreach ($info_f as  $info_c) {
             $all_list[] = $info_c['areaid'];
@@ -260,16 +263,17 @@ class AreaController extends CommonController
     /**
      * 获取目标部门的上级部门
      * @param  int $areaid 目标部门
+     * @param  boolean $no_self 是否加上自身部门  true  否  false 是
      * @return array
      */
-    public function parea($areaid)
+    public function parea($areaid,$no_self=false)
     {
         $db = D($this->models['area']);
         $where['areaid'] = $areaid;
         $data = $db->where($where)->select();
         $l_arr = [0=>'areaid',1=>'fatherareaid'];
         $info_f = $this->getParentData($data,$this->models['area'],$l_arr);
-        //$info_f = array_merge($data,$info_f);
+        if(!$no_self) $info_f = array_merge($data,$info_f);
         $all_list = array();
         foreach ($info_f as  $info_c) {
             $all_list[] = $info_c['areaid'];

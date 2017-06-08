@@ -77,8 +77,12 @@ app.tp.areaname = "{:$areaname}";
         <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
     $('#dialog').dialog('close')" style="width:90px">取消</a>
     </div>
-        <div id="otherdialog" class="easyui-dialog" id="otherInfo" title="权限查看" 
+    <div id="otherdialog" class="easyui-dialog" id="otherInfo" title="权限查看"
         style="width:400px;height:400px;" data-options="closed:true" buttons="#buttons">
+        <div style="padding-top: : 10px;padding-left: 50px;">
+            <p style="color: #0E2D5F">这里能查看权限无法进行修改</p>
+        </div>
+
         <form id="otherInfoForm">
             <div class="form_m" style="display: none;">
                 <div for="empid" class="form_label">ID : </div>
@@ -104,13 +108,13 @@ app.tp.areaname = "{:$areaname}";
                 <input class=" form_in easyui-textbox" type="text" name="clientip" id="clientip"/>
             </div>
         </form>
-        
+
         <div style="padding-top: : 10px;padding-left: 50px;">
             <p style="color: #0E2D5F">额外管理部门，只能为自身所属部门下的部门</p>
             <p style="color: #0E2D5F">后端会自动排除多余的部门</p>
             <ul id="areaList"></ul>
         </div>
-    </div>  
+    </div>
     <div id="buttons">
             <a href="javascript:void(0)" class="easyui-linkbutton" id="menu_sure" iconCls="icon-ok" onclick="module.allowOther()" style="width:90px">确定</a>
             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:

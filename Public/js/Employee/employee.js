@@ -157,6 +157,7 @@ module.allowOther = function(){
                 $.messager.alert('操作提示',result.message,'info');
                 $('#otherdialog').dialog('close');
                 $('#datagrid').datagrid('reload',{
+                    areaid:module.areaid,
                     rand:Math.random()
                 });
             }

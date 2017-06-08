@@ -1,12 +1,9 @@
 <extend name="layouts:master" />
 <block name="link"></block>
 <block name="src">
-<script type="text/javascript">
-$(function(){
-    load_emp_tree();
-})
-</script>
+<script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/Index/home.js"></script>
 </block>
 <block name="main">
-<include file="Areareg/area_list"/>
+<ul id="emp_area"></ul>
 </block>

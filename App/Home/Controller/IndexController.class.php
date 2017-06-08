@@ -39,8 +39,8 @@ class IndexController extends CommonController {
             //验证登录用户
             $res = $db->check_exist($request);
             $roleDb = D($this->models['role']);
+            $ip = get_client_ip();
             if($res){
-                $ip = get_client_ip();
                 if($res['bindingip'] == 1){
                     if($ip != $res['clientip']){
                        $res['message'] = '请在指定IP登录';
@@ -73,14 +73,21 @@ class IndexController extends CommonController {
                 $where['password'] = I('password');
                 $empDb = D($this->models['employee']);
                 $res = $empDb->where($where)->find();
-                print_r($res);
                 if($res){
+                    if($res['bindingip'] == 1){
+                        if($ip != $res['clientip']){
+                           $res['message'] = '请在指定IP登录';
+                           $this->ajaxReturn($result);
+                        }
+                    }
                     $roleData = $roleDb->where('roleid = '.$res['roleid'])->field('rolename,functionlist')->find();
                     $roleData = g2us($roleData);
                     session('role',$roleData['rolename']);
                     session('menu',$roleData['functionlist']);
                     session('user',$res['name']);
                     session('code',I('username'));
+                    session('empid',$res['empid']);
+                    session('userarea',$roleData['userarea']);
                     session('usertype','police');       //登陆用户属性
                     $result['status'] = true;
                     $result['message'] = '验证成功';
@@ -91,17 +98,19 @@ class IndexController extends CommonController {
             $this->ajaxReturn($result);
         }
     }
+    //登出
     public function loginOut()
     {
         session(null);
         $this->redirect('Index/login');
     }
+    //修改密码
     public function change_password()
     {
         $newPassword = I('newpassword');
         $result['status'] = false;
         if(session('usertype') == 'normal'){
-            $db = D('Userreg');
+            $db = D($this->models['user']);
             $where['username'] = session('user');
             $data['userpassword'] = I('newpassword');
             $res = $db->where($where)->save($data);
@@ -112,7 +121,7 @@ class IndexController extends CommonController {
             }
         }
         if(session('usertype') == 'police'){
-            $empDb = D('employee');
+            $empDb = D($this->models['employee']);
             $where['code'] = session('code');
             $data['password'] = I('newpassword');
             $res = $empDb->where($where)->save($data);
