@@ -304,10 +304,11 @@ class EmployeeController extends CommonController
     public function show_employee()
     {
         $empDb = D($this->models['employee']);
-
+        $l_arr = ['areaid','empid','name'];
+        $icon = 'icon-user';
+        $attributes = ['code','name'];
         //普通用户信息展示
         if(session('usertype') == 'normal'){
-
             //当前用户的管理部门
             $action = A($this->actions['area']);
             $userarea = $action->tree_list();    //easyui tree
@@ -315,9 +316,8 @@ class EmployeeController extends CommonController
             $c_area = explode(',', session('userarea'));
             $where['areaid'] = array('in',$c_area);
             $emps = $empDb->where($where)->select();
-            $l_arr = ['areaid','empid','name'];
-            $icon = 'icon-user';
-            $empAreaTree = $this->add_other_info($userarea,$emps,$l_arr,$icon);
+
+            $empAreaTree = $this->add_other_info($userarea,$emps,$l_arr,$icon,$attributes);
             $this->ajaxReturn(g2us($empAreaTree));
         }
         //警员信息展示
@@ -350,9 +350,7 @@ class EmployeeController extends CommonController
                 $emps = $empDb->where($where)->select();
             }
             $emps[] = $empInfo;
-            $l_arr = ['areaid','empid','name'];
-            $icon = 'icon-user';
-            $empAreaTree = $this->add_other_info($data_tree,$emps,$l_arr,$icon);
+            $empAreaTree = $this->add_other_info($data_tree,$emps,$l_arr,$icon,$attributes);
             $this->ajaxReturn(g2us($empAreaTree));
         }
     }

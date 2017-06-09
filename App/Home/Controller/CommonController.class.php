@@ -21,7 +21,7 @@ class CommonController extends Controller {
     	$formatTree = array();
         foreach ($ids as $id) {
             $odrData = array();
-            foreach ($datas as $data) {
+            foreach ($datas as $key=>$data) {
                 if($id == $data[$l_arr[2]]){
                     $odrData[] = $data[$l_arr[3]];
                     $nextIds[] = $data[$l_arr[0]];
@@ -32,16 +32,16 @@ class CommonController extends Controller {
                         }
                     }
                     $doTree['text'] = $data[$l_arr[1]];
-                    foreach ($L_attributes as $key=>$L_attribute) {
-                        if(!is_numeric($key)){
-                            $doTree[$key] = $data[$L_attribute];
+                    foreach ($L_attributes as $k=>$L_attribute) {
+                        if(!is_numeric($k)){
+                            $doTree[$k] = $data[$L_attribute];
                         }else{
                             $doTree[$L_attribute] = $data[$L_attribute];
                         }
                     }
                     //删除已经符合条件的数据减少下一次循环的次数
                     unset($datas[$key]);
-                    $children = $this->formatTree($nextIds,$datas,$l_arr,$L_attributes,$check_arr,$icons);
+                    $children = $this->formatTree($nextIds,$datas,$l_arr,$L_attributes,$check_arr,$icons,$noclose);
                     $nextIds = '';
                     if(!empty($children)){
                         if(!empty($noclose)){
@@ -164,27 +164,36 @@ class CommonController extends Controller {
      * @param array $easyuiTree 已经生成好的树
      * @param array $otherData  其他的数据信息
      * @param array $checkFiled  需要验证添加的字段  0-checkid  1-id 2-name
+     * @param  array $attributes 额外需要保存的信息 ['iconcls']//直接处理  ['iconCls'=>'iconcls']//根据键名处理
      * @param string $icon       加载的图标
      */
-    public function add_other_info($easyuiTree,$otherData,$checkFiled,$icon)
+    public function add_other_info($easyuiTree,$otherData,$checkFiled,$icon,$attributes)
     {
         foreach ($easyuiTree as &$node) {
             $children = array();
             foreach ($otherData as $key=>$info) {
                 //如果符合验证
-
                 $data = array();
                 if($node['id'] == $info[$checkFiled[0]]){
                     $data['id'] = $info[$checkFiled[1]];   //id
                     $data['text'] = $info[$checkFiled[2]]; //内容
                     $data['iconCls'] = $icon;                   //图标
+                    if(!empty($attributes)){
+                        foreach ($attributes as $k => $attribute) {
+                            if(!is_numeric($k)){
+                                $data[$k] = $info[$attribute];
+                            }else{
+                                $data[$attribute] = $info[$attribute];
+                            }
+                        }
+                    }
                     $children[] = $data;
                     unset($otherData[$key]);        //符合条件的删除，减少下一次的循环
                 }
             }
             if($node['children']){      //如果有子节点
                 //递归调用
-                $childrens = $this->add_other_info($node['children'],$otherData,$checkFiled,$icon);
+                $childrens = $this->add_other_info($node['children'],$otherData,$checkFiled,$icon,$attributes);
                 //合并数据
                 if(!empty($children)){
                     $node['children'] = array_merge($children,$childrens);
@@ -203,7 +212,7 @@ class CommonController extends Controller {
      * 写日志
      * @param  string $action 操作事件 详细内容
      * @param  string $moudle 菜单
-     * @return viod         
+     * @return viod
      */
     public function write_log($action,$moudle)
     {

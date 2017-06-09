@@ -34,4 +34,9 @@ class DemoController extends CommonController
 		$page = I('page');
 		$this->display($page);
 	}
+	public function test_slice()
+	{
+		$arr = range(1,1000);
+		dump(array_slice($arr, 10,10));
+	}
 }

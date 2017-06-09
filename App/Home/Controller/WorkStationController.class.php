@@ -1,6 +1,6 @@
 <?php
 /************************************
- *设备控制器 web  空间站 执法记录仪
+ *设备控制器 web  空间站 工作站
  *************************************/
 namespace Home\Controller;
 
@@ -10,12 +10,13 @@ class WorkStationController extends CommonController
     protected $models = ['wsbase'=>'Enforce\WsBase'];           //执法仪
     protected $actions = ['employee'=>'Employee'];
     protected $views = ['ws_base'=>'wsBase'];
+    protected $logContent = '设备管理/工作站管理';
     public function ws_base_show()
     {
         $this->assignInfo();
         $this->display($this->views['ws_base']);
     }
-    //执法记录仪
+    //工作站
     public function ws_base_list()
     {
         $request['dz'] = I('dz');           //地址
@@ -39,7 +40,7 @@ class WorkStationController extends CommonController
         }
         $this->ajaxReturn(g2us($data));
     }
-    //执法记录仪
+    //工作站
     public function ws_base_add()
     {
         $request['qyzt'] = I('qyzt');     //启用状态 0:未启用，1：启用
@@ -50,9 +51,10 @@ class WorkStationController extends CommonController
         $request['dh']    = I('dh');        //负责人电话
         $db =  D($this->models['wsbase']);
         $result = $db->getTableAdd(u2gs($request));
+        $this->write_log('添加'.$request['gzzbh'].':'.$request['dz'],$this->logContent);
         $this->ajaxReturn($result);
     }
-    //执法记录仪
+    //工作站
     public function ws_base_edit()
     {
         $request['qyzt'] = I('qyzt');     //启用状态 0:未启用，1：启用
@@ -65,13 +67,21 @@ class WorkStationController extends CommonController
         $result = $db->getTableEdit($where,u2gs($request));
         $this->ajaxReturn($result);
     }
-    //执法记录仪
+    //工作站
     public function ws_base_remove()
     {
         $cpxh = I('cpxh');                  //产品序号
         $request['cpxh'] = array('in',u2g($cpxh));
         $db =  D($this->models['wsbase']);
         $result = $db->getTableDel($where);
+        $this->write_log('删除工作站',$this->logContent);
         $this->ajaxReturn($result);
+    }
+    //工作站状态统计
+    public function ws_status_statistics()
+    {
+        $db =  D($this->models['wsbase']);
+        $data = $db->field('count(gzzbh) as num,zxzt')->group('zxzt');
+        $this->ajaxReturn($data);
     }
 }

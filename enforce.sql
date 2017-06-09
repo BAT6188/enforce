@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50520
 File Encoding         : 936
 
-Date: 2017-06-07 15:13:09
+Date: 2017-06-09 16:59:11
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -232,8 +232,8 @@ CREATE TABLE `pe_video_list` (
   `wjlx` int(2) DEFAULT NULL COMMENT '0:未知,1:视频,2:音频,3:图片',
   `jyxm` varchar(60) DEFAULT NULL COMMENT '警员姓名',
   `jybh` varchar(6) NOT NULL DEFAULT '000000' COMMENT '警员编号',
-  `dwbh` varchar(12) DEFAULT NULL COMMENT '单位编号',
-  `dwmc` varchar(100) DEFAULT NULL COMMENT '单位名称',
+  `areaid` int(11) NOT NULL DEFAULT '1' COMMENT '单位编号',
+  `areaname` varchar(128) DEFAULT NULL COMMENT '单位名称',
   `cpxh` varchar(7) NOT NULL DEFAULT '0000000' COMMENT '产品(执法仪)序号 7位',
   `ccfwq_ip` varchar(64) DEFAULT NULL COMMENT '存储服务器',
   `ccwz` varchar(200) DEFAULT NULL COMMENT '存储位置',
@@ -243,18 +243,18 @@ CREATE TABLE `pe_video_list` (
   `bzlx` int(2) DEFAULT '0' COMMENT '标注类型,0:未标注,1:标注(典型案例)',
   `gzzbh` varchar(12) NOT NULL DEFAULT '0' COMMENT '工作站编号',
   `gzz_ip` varchar(64) NOT NULL COMMENT '工作站IP',
-  `mark` varchar(512) DEFAULT '无' COMMENT '备注',
+  `mark` varchar(512) DEFAULT NULL COMMENT '备注',
   `upload` int(2) NOT NULL DEFAULT '0' COMMENT '0:不上传，1：上传到中心服务器(重要视频)',
   `video_type` int(2) DEFAULT '9' COMMENT '视频分类(1:酒驾、2:事故、3:毒驾、4:违法、9:其他)',
   `auth_key` varchar(32) DEFAULT NULL COMMENT '认证密钥',
   PRIMARY KEY (`wjbh`,`jybh`),
-  KEY `idx_jybh` (`jybh`) USING BTREE
+  KEY `idx_jybh` (`jybh`) USING BTREE,
+  KEY `idx_areaid` (`areaid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- ----------------------------
 -- Records of pe_video_list
 -- ----------------------------
-INSERT INTO `pe_video_list` VALUES ('1111111@201506250850560000', '吴晓@201506250850560000.mp4', '2015-06-25 08:50:56', null, '6.5', '1', null, '123456', null, null, '1111111', '192.168.0.249', null, 'http://192.168.0.249/pe_data/1111111/20160523/mp4/1111111@201506250850560000.mp4', null, '2017-05-24 17:44:11', null, '12345', '192.168.0.222', null, '0', '9', null);
 
 -- ----------------------------
 -- Table structure for `role`
@@ -282,9 +282,9 @@ INSERT INTO `role` VALUES ('4', '设备用户', '拥有用户对设备管理的权限', '500,503
 DROP TABLE IF EXISTS `sys_log`;
 CREATE TABLE `sys_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `aid` int(11) NOT NULL DEFAULT '0',
+  `name` varchar(64) NOT NULL DEFAULT '0',
   `cmt` varchar(128) NOT NULL DEFAULT '',
-  `dte` varchar(32) NOT NULL DEFAULT '',
+  `dte` datetime NOT NULL,
   `module` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;

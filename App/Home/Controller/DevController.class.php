@@ -13,6 +13,7 @@ class DevController extends CommonController
     protected $actions = ['employee'=>'Employee',
                           'area'=>'Area'];
     protected $views = ['pe_base'=>'peBase'];
+    protected $logContent = '设备管理/执法仪管理';
     public function pe_base_show()
     {
         $this->assignInfo();
@@ -71,6 +72,7 @@ class DevController extends CommonController
         $request['jybh']    = I('jybh');        //警员编号
         $db =  D($this->models['pebase']);
         $result = $db->getTableAdd(u2gs($request));
+        $this->write_log('添加'.$request['cpxh'].':'.$request['jyxm'],$this->logContent);
         $this->ajaxReturn($result);
     }
     //执法记录仪
@@ -92,6 +94,7 @@ class DevController extends CommonController
         $request['cpxh'] = array('in',u2g($cpxh));
         $db =  D($this->models['pebase']);
         $result = $db->getTableDel($where);
+        $this->write_log('删除执法记录仪',$this->logContent);
         $this->ajaxReturn($result);
     }
     //传值  添加执法仪时能够选择的警员

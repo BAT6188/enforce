@@ -1,0 +1,14 @@
+<extend name="layouts:master" />
+<block name="link"></block>
+<block name="src">
+<script type="text/javascript" src="__PUBLIC__/js/Log/sysLog.js"></script>
+</block>
+<block name="main">
+    <table id="datagrid" toolbar="#toolbar"></table>
+    <div id="toolbar">
+        <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
+             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="module.show()">全部</a>&nbsp;&nbsp;&nbsp;
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="module.search()">搜索</a>
+        </form>
+    </div>
+</block>
