@@ -13,7 +13,6 @@ class WorkStationController extends CommonController
     protected $logContent = '设备管理/工作站管理';
     public function ws_base_show()
     {
-        $this->assignInfo();
         $this->display($this->views['ws_base']);
     }
     //工作站
@@ -35,8 +34,8 @@ class WorkStationController extends CommonController
             $where['zxzt'] = I('zxzt');
         }
         $data = $db->getTableList(u2gs($where),$page,$rows);
-        foreach ($data as &$value) {
-            $value['zxztname'] = $value['zxzt'] == 0 ? '离线' : '在线';
+        foreach ($data['rows'] as &$value) {
+            $value['zxztname'] = $value['zxzt'] == 0 ? u2g('离线') : u2g('在线');
         }
         $this->ajaxReturn(g2us($data));
     }

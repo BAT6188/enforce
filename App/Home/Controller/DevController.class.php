@@ -12,12 +12,23 @@ class DevController extends CommonController
                          'employee'=>'Enforce\Employee'];          //记录信息
     protected $actions = ['employee'=>'Employee',
                           'area'=>'Area'];
-    protected $views = ['pe_base'=>'peBase'];
     protected $logContent = '设备管理/执法仪管理';
+    //执法仪配置
     public function pe_base_show()
     {
         $this->assignInfo();
-        $this->display($this->views['pe_base']);
+        $this->display('pe_base_show');
+    }
+    //执法仪状态
+    public function pe_show_status()
+    {
+       $this->assignInfo();
+       $this->display('pe_show_status');
+    }
+    //执法仪统计
+    public function pe_sat()
+    {
+        $this->display('pe_sat');
     }
     //执法记录仪
     public function pe_base_list()
@@ -57,7 +68,9 @@ class DevController extends CommonController
             $res = $this->get_pe_base_status($cpxhs);
             //$this->ajaxReturn($res);
             foreach ($data['rows'] as &$value) {
-                $value['status'] = $res[$value['cpxh']];       //0:停用 1:使用率底 2:活跃
+                $value['times'] = $res[$value['cpxh']];     //七天内的使用次数
+                //0:停用 1:使用率底 2:活跃
+                $value['status'] = $res[$value['cpxh']] 0 ? $res[$value['cpxh']] > 4 ? 2 : 1 : 0;
             }
         }
         $this->ajaxReturn(g2us($data));
@@ -71,6 +84,11 @@ class DevController extends CommonController
         $request['standard']    = I('standard'); //设备规格
         $request['jybh']    = I('jybh');        //警员编号
         $db =  D($this->models['pebase']);
+        $check = $db->where('cpxh='.u2g($request['cpxh']))->find();
+        if($check){
+            $result['message'] = '添加失败，该产品已经添加过，无法添加。';
+            $this->ajaxReturn($result);
+        }
         $result = $db->getTableAdd(u2gs($request));
         $this->write_log('添加'.$request['cpxh'].':'.$request['jyxm'],$this->logContent);
         $this->ajaxReturn($result);
@@ -78,11 +96,11 @@ class DevController extends CommonController
     //执法记录仪
     public function pe_base_edit()
     {
-        $request['product'] = I('product');     //生产厂家
-        $where['cpxh']    = I('cpxh');        //产品序号  不可更改
-        $request['jyxm']    = I('jyxm');        //警员姓名
-        $request['standard']    = I('standard'); //设备规格
-        $request['jybh']    = I('jybh');        //警员编号
+        $request['product'] = I('product');       //生产厂家
+        $where['cpxh']    = I('cpxh');            //产品序号  不可更改
+        $request['jyxm']    = I('jyxm');          //警员姓名
+        $request['standard']    = I('standard');  //设备规格
+        $request['jybh']    = I('jybh');          //警员编号
         $db =  D($this->models['pebase']);
         $result = $db->getTableEdit($where,u2gs($request));
         $this->ajaxReturn($result);
@@ -93,7 +111,7 @@ class DevController extends CommonController
         $cpxh = I('cpxh');                  //产品序号
         $request['cpxh'] = array('in',u2g($cpxh));
         $db =  D($this->models['pebase']);
-        $result = $db->getTableDel($where);
+        $result = $db->getTableDel($request);
         $this->write_log('删除执法记录仪',$this->logContent);
         $this->ajaxReturn($result);
     }
@@ -133,7 +151,7 @@ class DevController extends CommonController
         foreach ($initInfo as $key => $days) {
             $total = count($days);
             //大于4天活跃 大于 0 天 使用率低 0 天 停用
-            $result[$key] = $total > 0 ? $total > 4 ? 2 : 1 : 0;
+            $result[$key] = $total;
         }
         return  $result;
     }

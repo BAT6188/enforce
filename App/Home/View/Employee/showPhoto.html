@@ -45,7 +45,6 @@ thisPageThings.show = function(){
             areaid:thisPageThings.areaid
         },
         success:function(data){
-            console.log(data);
             if(data.total > 0){
                 $.each(data.rows,function(n,m){
                     thisPageThings.open_img(m);

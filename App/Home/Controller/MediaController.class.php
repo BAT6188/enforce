@@ -16,6 +16,7 @@ class MediaController extends CommonController
                           'user'=>'User',
                           'employee'=>'Employee'];
     protected $views = ['play_video'=>'playVideo'];
+    protected $logContent = '数据管理/媒体数据';
     //单文件播放页面
     public function play_video()
     {
@@ -24,7 +25,31 @@ class MediaController extends CommonController
         $where['wjbh'] = u2g($wjbh);
         $videoInfo = $db->where($where)->find();
         $this->assign('videoInfo',$videoInfo);
-        $this->disolay('play_video');
+        $this->display('play_video');
+    }
+    public function show_sat()
+    {
+        $pages = array('work_sat'=>'work_sat',  //工作量统计
+                       'lay_sat'=>'lay_sat',    //执法统计
+                       'assessmeny_sat'=>'assessmeny_sat',  //考核统计
+                       'unusual_sat'=>'unusual_sat');       //异常统计
+        $pege = I('satType','work_sat');
+        $this->display($pages[$page]);
+    }
+    //执法查询
+    public function law_query()
+    {
+        $this->display('law_query');
+    }
+    //典型案列
+    public function typical_case()
+    {
+        $this->display('typical_case');
+    }
+    //数据比对
+    public function data_contrast()
+    {
+        $this->display('data_contrast');
     }
     /**
      * 统计数据，根据权限排除不是自己能管理的警员
@@ -90,12 +115,11 @@ class MediaController extends CommonController
      /**
      * 显示数据，根据权限排除不是自己能管理的警员
      * @param  array $where  筛选条件
-     * @param  string $group  分组
+     * @param  int $page 页数
+     * @param  int $rows 条数
      * @param  int $areaid 部门ID
      * @param  string $order 排序
      * @param  string $jybh 多个用,号隔开   123,1236,12311
-     * @param  int $page 页数
-     * @param  int $rows 条数
      * @return array   没有符合条件的警员  error 其他返回数据 无法保证一定有数据
      */
     public function media_info_list($where,$page,$rows,$areaid='',$order,$jybh='')
@@ -103,17 +127,28 @@ class MediaController extends CommonController
         $empsinfo = $this->emps_s_info($areaid);
         if($empsinfo['total'] <1){
             $res['error'] = '没有可统计的警员';
-            $this->ajaxReturn($res);
+            return $res;
         }
         $total = $empsinfo['total'];
         $allowCodes = $empsinfo['allowCodes'];
+        if($jybh != ''){
+            $jybh = explode(',', $jybh);
+            $allowCodes = array_intersect($jybh,$allowCodes);
+        }
+        if(!empty($allowCodes)){
+            $data['error'] = '没有警员信息可查看';
+            return $data;
+        }
         $db = D($this->models['pe_video_list']);
         foreach ($allowCodes as $allowCode) {
             $where['jybh'][] = array('EQ',$allowCode);
         }
         $where['jybh'][] = 'OR';
-        $data = $db->where($where)->order($order)->select();
-        return $data;
+        $data = $db->where($where)->order($order)->page($page,$rows)->select();
+        $count = $db->where($where)->count('jybh');
+        $res['rows'] = $data ? $data : array();
+        $res['total'] = $count;
+        return $res;
     }
     //民警统计
     public function emps_sta($jybhs,$where,$field='',$group,$order)
@@ -304,25 +339,35 @@ class MediaController extends CommonController
             $userAreas[] = $currentUserArea['areaid'];
         }
         $areaids = explode(',',session('userarea'));
+        $parent = array(0);             //父级部门ID
         if($mooDarea != ''){
+            $areadb = D($this->models['area']);
+            $parent = (array)$areadb->where('areaid='.$mooDarea)->getField('fatherareaid');
             $show = $action->carea($areaid);
             //需要查询的数据
             $areaids = array_intersect($areaids,$show);
             //页面需要显示的数据
             $userAreas = array_intersect($userAreas,$show);
         }
+        //准备初始化的显示数据
+        $showWhere = array();
+        foreach ($userAreas as $areaid) {
+            $showWhere['areaid'][] = array('EQ',$areaid);
+        }
+        $showWhere['areaid'][] = 'OR';
+        $initInfos = $areadb->field('areaid,areaname,fatherareaid')->where($showWhere)->select();
+        $satInfo = array();
+        $initShow = array('num'=>0,'video'=>0,'picture'=>0,'vioce'=>0,
+                          'unkonwn'=>0,'nomark'=>0,'ismark'=>0,'wjcd'=>0,'name'=>'');
+        foreach ($initInfos as $initInfo) {
+            $initInfo = array_merge($initInfo,$initShow);
+            $satInfo[$initInfo['areaid']] = $initInfo;
+        }
+        //准备查询数据
         foreach ($areaids as $areaid) {
             $where['areaid'][] = array('EQ',$areaid);
         }
         $where['areaid'][] = 'OR';
-        //准备初始化的数据
-        $areadb = D($this->models['area']);
-        $initInfos = $areadb->field('areaid,areaname,fatherareaid')->where($where)->select();
-        $satInfo = array();
-        foreach ($initInfos as $initInfo) {
-            $satInfo[$initInfo['areaid']] = $initInfo;
-        }
-        //准备查询数据
         $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));
         $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));
         $where['start_time'][] = array('EGT',$request['btime']);
@@ -339,8 +384,8 @@ class MediaController extends CommonController
         $ismarkWhere['mark'][] = array('NEQ','无');
         $ismarkWhere['mark'][] = array('NEQ','');
         $ismarkWhere['mark'][] = array('exp','is not null');
-        $dataw = $this->emps_sta($areaids,$nomarkWhere,$field,'wjlx,areaid', 'num desc');
-        $datay = $this->emps_sta($areaids,$ismarkWhere,$field,'wjlx,areaid', 'num desc');
+        $dataw = $this->areas_sta($areaids,$nomarkWhere,$field,'wjlx,areaid', 'num desc');
+        $datay = $this->areas_sta($areaids,$ismarkWhere,$field,'wjlx,areaid', 'num desc');
         $fields = array('num'=>'num','nomark'=>'num','wjcd'=>'wjcd');
         $markField = 'areaid';
         $paresFields = array('wjlx'=>array('field'=>'num',
@@ -353,9 +398,63 @@ class MediaController extends CommonController
         unset($fields['nomark']);
         $fields['ismark'] = 'num';
         $satInfo = $this->pares_data($satInfo,$datay,$fields,$markField,$paresFields,$doOneFileds);
-        $res['total'] = $total;
+        $res['total'] = count($userAreas);
         $res['rows'] = array_values($satInfo);
         $this->ajaxReturn($res);
     }
-    
+    //异常数据
+    public function unusual_sat_list()
+    {
+        $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));   //开始时间
+        $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));              //结束时间
+        $areaid = I('areaid','');       //部门ID
+        $jybh = I('jybh','');           //警员编号
+        $data = $this->areas_sta($areaids,$nomarkWhere,$field,'wjlx,areaid', 'num desc');
+
+    }
+    //媒体数据显示
+    public function media_list()
+    {
+        $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));   //开始时间
+        $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));              //结束时间
+        $areaid = I('areaid','');       //部门ID
+        $jybh = I('jybh','');           //警员编号
+        $request['wjlx'] = I('wjlx','');            //文件类型
+        $request['bzlx'] = I('bzlx','');            //标注类型
+        $request['mark'] = I('mark','');        //备注
+        $page = I('page');
+        $rows = I('rows');
+        $request['video_type'] = I('video_type','');    //视频类型
+        if($request['video_type'] != '') $where['video_type'] = $request['video_type'];
+        if($request['wjlx'] != '') $where['wjlx'] = $request['wjlx'];
+        if($request['bzlx'] != '') $where['bzlx'] = $request['bzlx'];
+        if($request['mark'] != '') $where['mark'] = array('like','%'.$request['mark'].'%');
+        $where['start_time'][] = array('EGT',$request['btime']);
+        $where['start_time'][] = array('ELT',$request['etime']);
+        $data = $this->media_info_list($where,$page,$rows,$areaid,'start_time desc',$jybh);
+        $this->ajaxReturn(g2us($data));
+    }
+    //数据更新
+    public function media_update()
+    {
+        $request = I();
+        $wjbhs = explode(',',$request['wjbh']);
+        $where = $this->where_key_or($wjbhs,'wjbh');
+        $db = D($this->models['pe_video_list']);
+        $result = $db->getTableEdit($request);
+        $this->write_log('更新文件'.$request['wjbh'],$this->logContent);
+        $this->ajaxReturn($result);
+    }
+    //数据更新
+    public function media_remove()
+    {
+        $request = I();
+        $wjbhs = explode(',',$request['wjbh']);
+        $where = $this->where_key_or($wjbhs,'wjbh');
+        $db = D($this->models['pe_video_list']);
+        $result = $db->getTableDel($request);
+        $this->write_log('删除文件'.$request['wjbh'],$this->logContent);
+        $this->ajaxReturn($result);
+    }
+
 }

@@ -74,13 +74,41 @@ class AreaController extends CommonController
         $data['userarea'] = implode(',', $userarea);
         $where['userid'] = session('userid');
         $link_db->getTableEdit($where,$data);
-        //更新用户表
+        //更新父用户
         $puserarea = $this->puserarea();
         foreach ($puserarea as $key => $value) {
             $value[] = $add_area;
             $data['userarea'] = implode(',', $value);
             $where['userid'] = $key;
             $link_db->getTableEdit($where,$data);
+        }
+        //更新子用户
+        $puserarea = $this->cuserarea();
+        foreach ($puserarea as $key => $value) {
+            //判断用户是否具有管理该部门的上级部门的权限,如果拥有则向用户添加里面
+            if(in_array($request['fatherareaid'],$value)){
+                $value[] = $add_area;
+                $data['userarea'] = implode(',', $value);
+                $where['userid'] = $key;
+                $link_db->getTableEdit($where,$data);
+            }
+        }
+        //更新警员表
+        $empWhere = array();
+        $empWhere['userarea'][] = array('NEQ','');
+        $empWhere['userarea'][] = array('exp','is not null');
+        $empWhere['userarea'][] = 'OR';
+        $empdb = D($this->models['employee']);
+        //找出拥有管理权限的用户
+        $empMans = $empdb->where($empWhere)->getField('empid,userarea');
+        foreach ($empMans as $k => $v) {
+            $manAreas = explode(',',$v);
+            if(in_array($request['fatherareaid'],$manAreas)){
+                $manAreas[] = $add_area;
+                $data['userarea'] = implode(',', $manAreas);
+                $updateWhere['empid'] = $key;
+                $empdb->getTableEdit($where,$data);
+            }
         }
         $this->write_log('添加'.$request['areaname'],$this->logContent);
         $this->ajaxReturn($result);
@@ -121,6 +149,25 @@ class AreaController extends CommonController
             foreach ($this->remove_link_tabs as $tab) {
                 $db_rm = D($tab);
                 $db_rm->getTableDel($where);
+            }
+            //更新警员表
+            $empWhere = array();
+            $empWhere['userarea'][] = array('NEQ','');
+            $empWhere['userarea'][] = array('exp','is not null');
+            $empWhere['userarea'][] = 'OR';
+            $empdb = D($this->models['employee']);
+            //找出拥有管理权限的用户
+            $empMans = $empdb->where($empWhere)->getField('empid,userarea');
+            foreach ($empMans as $k => $v) {
+                $manAreas = explode(',',$v);
+                $holdArae = array_diff($manAreas, $intersect);
+                $updateArae = implode(',', $holdArae);
+                //如果更新之后的与之前的数据有所不同，那么更新警员信息表
+                if($updateArae != $v){
+                    $data['userarea'] = implode(',', $updateArae);
+                    $updateWhere['empid'] = $key;
+                    $empdb->getTableEdit($where,$data);
+                }
             }
         }else{
             $result['message'] = '对不起,你没有权限删除这些部门';

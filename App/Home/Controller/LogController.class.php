@@ -20,7 +20,6 @@ class LogController extends CommonController
         $logType = I('logType');
         $this->display($this->views[$logType]);
     }
-    日志类型,1:关机，2：开机，3：拍照，4：录像，5：录音，7：结束录像，0：其它
     //执法仪日志
     public function pe_log_list()
     {

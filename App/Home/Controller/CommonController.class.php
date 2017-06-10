@@ -211,17 +211,32 @@ class CommonController extends Controller {
     /**
      * 写日志
      * @param  string $action 操作事件 详细内容
-     * @param  string $moudle 菜单
+     * @param  string $module 菜单
      * @return viod
      */
-    public function write_log($action,$moudle)
+    public function write_log($action,$module)
     {
         $data['dte'] = date('Y-m-d H:i:s');
         $data['name'] = u2g(session('user'));
-        $data['moudle'] = u2g($moudle);
+        $data['module'] = u2g($module);
         $ip = get_client_ip();
         $data['cmt'] = u2g($action.'('.$ip.')');
         $db = D('Enforce\SysLog');
         $db->add($data);
+    }
+    /**
+     * where条件拼接
+     * @param  array $data  拼接数组
+     * @param  string $field 字段
+     * @return array        TP where
+     */
+    public function where_key_or($data,$field)
+    {
+        $where = array();
+        foreach ($data as $value) {
+            $where[$field][] = array('EQ',$value);
+        }
+        $where[$field][] = 'OR';
+        return $where;
     }
 }

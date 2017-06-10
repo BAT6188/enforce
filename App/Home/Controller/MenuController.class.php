@@ -101,7 +101,7 @@ class MenuController extends CommonController
         }
         foreach ($menus as $menu) {
             if(!in_array($menu['prefunid'],$pids)){
-                $menuDb = D($this->models['menu']);;
+                $menuDb = D($this->models['menu']);
                 $where['funid'] = $menu['prefunid'];
                 $data = $menuDb->where($where)->find();
                 if($data!=''  && !in_array($data['funid'],$pids)){
@@ -115,5 +115,10 @@ class MenuController extends CommonController
             $datas = array_merge($datas,$datac);
         }
         return $datas;
+    }
+    public function test()
+    {
+        $menuDb = D($this->models['menu']);
+        echo implode(',', $menuDb->getField('id',true));
     }
 }
