@@ -1,0 +1,123 @@
+<extend name="layouts:master" />
+<block name="link"></block>
+<block name="src">
+<script type="text/javascript">
+//根部门  用于数据的初始化
+/*app.tp.areaid = "{:$areaid}";
+app.tp.areaname = "{:$areaname}";*/
+</script>
+<script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/Media/assessmeny.js"></script>
+</block>
+<block name="main">
+<div class="easyui-layout" fit="true">
+        <div data-options="region:'west',title:'所有部门',iconCls:'icon-drive',split:false" style="width:20%;background:#eee;">
+            <ul id="area_list"></ul>
+        </div>
+       <div data-options="region:'center',border:false,iconCls:'icon-film'" style="width:60%;background:#eee;">
+           <table id="treegrid" toolbar="#toolbar"></table>
+       </div>
+    </div>
+    <div id="toolbar">
+        <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
+             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="module.show()">全部</a>&nbsp;&nbsp;&nbsp;
+                姓名: <input id="name"  class="easyui-textbox" data-options="height:22"  style="width:168px"/>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="module.search()">搜索</a>
+        </form>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            data-options="iconCls:'icon icon-drive'" style="float: right;color:#0E5AB9;">
+        当前部门：<span id="mu_ser">无</span></a>
+        <a href="javascript:void(0)" onclick="module.infoBar(1)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a>
+        <a href="javascript:void(0)" onclick="module.infoBar(2)" class="easyui-linkbutton" data-options="iconCls:'icon icon-edit',plain:true">修改</a>
+        <a href="javascript:void(0)" onclick="module.remove()" class="easyui-linkbutton" data-options="iconCls:'icon icon-delete',plain:true">
+        删除</a>
+        <a href="javascript:void(0)" onclick="module.allowAreaBar()" class="easyui-linkbutton" data-options="iconCls:'icon icon-basket_put',plain:true">权限分配</a>
+    </div>
+<!-- 增加 -->
+    <div id="dialog" class="easyui-dialog" title="添加" buttons="#addButtons"
+    data-options="iconCls:'icon-add',resizable:true,modal:true,closed:true">
+        <p style="color: #0E2D5F;margin-left: 20px;">你即将向<sapn id="infoAreaname"></span></p>
+        <form id="form" method="post" enctype="multipart/form-data">
+            <div class="form_m" style="display: none"><div for="empid" class="form_label" >ID : </div>
+                <input class=" form_in easyui-textbox" type="text" name="empid" required="true" /></div>
+            <div class="form_m"><div for="code" class="form_label" >警号 : </div>
+                <input class=" form_in easyui-textbox" type="text" name="code" required="true" /></div>
+            <div class="form_m"><div for="name" class="form_label">姓名 : </div>
+                <input class=" form_in easyui-textbox" type="text" name="name" required="true"/></div>
+            <div class="form_m"><div for="sex" class="form_label">性别 : </div>
+                <select class=" easyui-combobox form_in" name="sex" style="width: 181px;"
+                    data-options="editable:false">
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+            </div>
+            <div class="form_m"><div for="phone" class="form_label">电话 : </div>
+                <input class=" form_in easyui-textbox" type="text" name="phone"/></div>
+            <div class="form_m"><div for="email" class="form_label">邮箱 : </div>
+                <input class=" form_in easyui-textbox" type="text" name="email"/></div>
+            <div class="form_m"><div for="remark" class="form_label">备注 : </div>
+                <input class=" form_in easyui-textbox" type="text" name="remark"/></div>
+            <div class="form_m" style="display: none"><div for="remark" class="form_label">部门 : </div>
+                <input class=" form_in easyui-textbox" type="text" name="areaid"/></div>
+            <div class="form_m"><div for="photo" class="form_label">照片 : </div>
+                <input class="easyui-filebox form_in"  name="photo"
+                    data-options="prompt:'警员照片',buttonText:'选择照片'"></div>
+            <div class="form_m"><div for="roleid" class="form_label">所属角色 : </div>
+                <select class=" easyui-combobox form_in" name="roleid" style="width: 181px;"
+                    data-options="editable:false">
+                    <foreach name="info['role']" item="role">
+                        <option value="{$role.roleid}">{$role.rolename}</option>
+                    </foreach>
+                </select>
+            </div>
+        </form>
+    </div>
+    <div id="addButtons">
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="module.changeinfo()" style="width:90px">确认</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
+    $('#dialog').dialog('close')" style="width:90px">取消</a>
+    </div>
+    <div id="otherdialog" class="easyui-dialog" id="otherInfo" title="权限查看"
+        style="width:400px;height:400px;" data-options="closed:true" buttons="#buttons">
+        <div style="padding-top: : 10px;padding-left: 50px;">
+            <p style="color: #0E2D5F">这里能查看权限无法进行修改</p>
+        </div>
+
+        <form id="otherInfoForm">
+            <div class="form_m" style="display: none;">
+                <div for="empid" class="form_label">ID : </div>
+                <input class=" form_in easyui-textbox" type="text" name="empid" required="true"/>
+            </div>
+            <div class="form_m"><div for="bindingip" class="form_label">绑定IP : </div>
+                <select class=" easyui-combobox form_in" name="bindingip" id="bindingip"
+                    style="width: 181px;"
+                    data-options="editable:false,
+                                  onSelect:function(record){
+                                     if(record.value == 0){
+                                        $('#clientipDiv').hide();
+                                     }else{
+                                        $('#clientipDiv').show();
+                                     }
+                                  }">
+                    <option value="0">否</option>
+                    <option value="1">是</option>
+                </select>
+            </div>
+            <div class="form_m" style="display: none;" id="clientipDiv">
+                <div for="clientip" class="form_label">IP : </div>
+                <input class=" form_in easyui-textbox" type="text" name="clientip" id="clientip"/>
+            </div>
+        </form>
+
+        <div style="padding-top: : 10px;padding-left: 50px;">
+            <p style="color: #0E2D5F">额外管理部门，只能为自身所属部门下的部门</p>
+            <p style="color: #0E2D5F">后端会自动排除多余的部门</p>
+            <ul id="areaList"></ul>
+        </div>
+    </div>
+    <div id="buttons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" id="menu_sure" iconCls="icon-ok" onclick="module.allowOther()" style="width:90px">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:
+            $('#otherdialog').dialog('close')" style="width:90px">取消</a>
+        </div>
+</block>

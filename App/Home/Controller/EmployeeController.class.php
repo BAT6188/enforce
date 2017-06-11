@@ -115,6 +115,7 @@ class EmployeeController extends CommonController
         foreach ($data['rows'] as &$value) {
             $value['areaname'] = array_key_exists($value['areaid'],$areas) ? $areas[$value['areaid']]  : u2g('系统根部门');
         }
+        $this->saveExcel(g2us($data),$logContent); //监测是否为导出
         $this->ajaxReturn(g2us($data));
     }
     //增加事件

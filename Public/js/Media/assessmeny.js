@@ -1,0 +1,19 @@
+$(function(){
+    $('#treegrid').treegrid({
+        url:app.url('Media/area_sat'),
+        idField:'areaid',
+        treeField:'areaname',
+        fit:true,
+        columns:[[
+            {field:'areaname',title:'部门',width:180},
+            {field:'num',title:'总数',width:180},
+            {field:'video',title:'视频',width:60,align:'right'},
+            {field:'vioce',title:'音频',width:80},
+            {field:'wjcd',title:'文件长度',width:80},
+            {field:'picture',title:'图片',width:80},
+            {field:'unkonwn',title:'未知文件',width:80},
+            {field:'ismark',title:'已编辑',width:80},
+            {field:'nomark',title:'未编辑',width:80}
+        ]]
+    });
+});

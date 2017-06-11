@@ -39,4 +39,34 @@ class DemoController extends CommonController
 		$arr = range(1,1000);
 		dump(array_slice($arr, 10,10));
 	}
+	public function testDemo()
+	{
+		$info[15] = ['id'=>15,'num'=>33,'pid'=>0];
+		$info[16] = ['id'=>16,'num'=>33,'pid'=>15];
+		$info[20] = ['id'=>20,'num'=>33,'pid'=>15];
+		$info[17] = ['id'=>17,'num'=>33,'pid'=>16];
+		$info[18] = ['id'=>18,'num'=>33,'pid'=>17];
+		$info[19] = ['id'=>19,'num'=>33,'pid'=>17];
+		krsort($info);
+		foreach ($info as $key => $value) {
+			$checkArr[$value['pid']][] = $key;
+		}
+		foreach ($info as $key => $value) {
+			if(empty($checkArr[$key])) continue;
+
+			foreach ($checkArr[$key] as $val) {
+				$info[$key]['num'] = $info[$key]['num']+$info[$val]['num'];
+			}
+			echo $key."<br>";
+			dump($checkArr[$key]);
+			echo '-----'."<br>";
+			/*if(in_array($value['pid'], $checkArr[$key])){
+
+			}
+			if($key==$value['pid']){
+				$info[$key]['num'] = $info[$key]['num'] + $value['num'];
+			}*/
+		}
+		dump($info);
+	}
 }

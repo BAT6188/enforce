@@ -34,7 +34,7 @@ class MediaController extends CommonController
                        'assessmeny_sat'=>'assessmeny_sat',  //考核统计
                        'unusual_sat'=>'unusual_sat');       //异常统计
         $pege = I('satType','work_sat');
-        $this->display($pages[$page]);
+        $this->display('assessmeny');
     }
     //执法查询
     public function law_query()
@@ -98,7 +98,7 @@ class MediaController extends CommonController
      */
     public function emps_s_info($areaid='')
     {
-         if(!S(session('user').$areaid) || !S(session('user').'total')){
+        if(!S(session('user').$areaid) || !S(session('user').'total')){
             $action = A($this->actions['employee']);
             $emps = $action->get_manger_emp($areaid);
             $allowCodes = array_keys($emps);
@@ -110,7 +110,9 @@ class MediaController extends CommonController
             $total = S(session('user').'total');
             $allowCodes = S(session('user').$areaid);
         }
-        return compact($total,$allowCodes);
+        $res['total'] = $total;
+        $res['allowCodes'] = $allowCodes;
+        return $res;
     }
      /**
      * 显示数据，根据权限排除不是自己能管理的警员
@@ -226,8 +228,9 @@ class MediaController extends CommonController
         $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));
         $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));
         $areaid = I('areaid','');    //部门ID
-        $page = I('page');
-        $page = I('rows');
+        $page = I('page',1);
+        $rows = I('rows',20);
+        $jybh = I('jybh','');
         $where['start_time'][] = array('EGT',$request['btime']);
         $where['start_time'][] = array('ELT',$request['etime']);
         $ismarkWhere = $where;
@@ -250,8 +253,17 @@ class MediaController extends CommonController
         }
         $total = $empsinfo['total'];
         $allowCodes = $empsinfo['allowCodes'];
+        
+        if($jybh != ''){
+            $jybhs = explode(',',$jybh);
+            $allowCodes = array_intersect($allowCodes,$jybhs);
+        }
         //需要检索的数据
         $satEmps = array_slice($allowCodes,($page-1)*$rows,$rows);
+        if(empty($satEmps)){
+            $res['error'] = '没有可统计的警员';
+            $this->ajaxReturn($res);
+        }
         //$satEmps = ['123456','000000'];
         $dataw = $this->emps_sta($satEmps,$nomarkWhere,$field,'wjlx,jybh', 'num desc');
         $datay = $this->emps_sta($satEmps,$ismarkWhere,$field,'wjlx,jybh', 'num desc');
@@ -278,49 +290,10 @@ class MediaController extends CommonController
         unset($fields['nomark']);
         $fields['ismark'] = 'num';
         $satInfo = $this->pares_data($satInfo,$datay,$fields,$markField,$paresFields,$doOneFileds);
-        /*//为处理数据
-        foreach ($dataw as $data) {
-            //添加部门
-            if($satInfo[$data['jybh']]['areaname'] == '') $satInfo[$data['jybh']]['areaname'] = $data['areaname'];
-            $satInfo[$data['jybh']]['num'] = $satInfo[$data['jybh']]['num'] + $data['num'];
-            $satInfo[$data['jybh']]['nomark'] = $satInfo[$data['jybh']]['nomark'] + $data['num'];
-            $satInfo[$data['jybh']]['wjcd'] = $satInfo[$data['jybh']]['num'] + $data['wjcd'];
-            if($data['wjlx'] == 1){
-                $satInfo[$data['jybh']]['video'] = $satInfo[$data['jybh']]['video'] + $data['num'];
-            }
-            if($data['wjlx'] == 2){
-                $satInfo[$data['jybh']]['vioce'] = $satInfo[$data['jybh']]['vioce'] + $data['num'];
-            }
-            if($data['wjlx'] == 3){
-                $satInfo[$data['jybh']]['picture'] = $satInfo[$data['jybh']]['picture'] + $data['num'];
-            }
-            if($data['wjlx'] == 0){
-                $satInfo[$data['jybh']]['unkonwn'] = $satInfo[$data['jybh']]['unkonwn'] + $data['num'];
-            }
-        }
-        //处理数据
-        foreach ($datay as $data) {
-            //添加部门
-            if($satInfo[$data['jybh']]['areaname'] == '') $satInfo[$data['jybh']]['areaname'] = $data['areaname'];
-            $satInfo[$data['jybh']]['num'] = $satInfo[$data['jybh']]['num'] + $data['num'];
-            $satInfo[$data['jybh']]['ismark'] = $satInfo[$data['jybh']]['ismark'] + $data['num'];
-            $satInfo[$data['jybh']]['wjcd'] = $satInfo[$data['jybh']]['num'] + $data['wjcd'];
-            if($data['wjlx'] == 1){
-                $satInfo[$data['jybh']]['video'] = $satInfo[$data['jybh']]['video'] + $data['num'];
-            }
-            if($data['wjlx'] == 2){
-                $satInfo[$data['jybh']]['vioce'] = $satInfo[$data['jybh']]['vioce'] + $data['num'];
-            }
-            if($data['wjlx'] == 3){
-                $satInfo[$data['jybh']]['picture'] = $satInfo[$data['jybh']]['picture'] + $data['num'];
-            }
-            if($data['wjlx'] == 0){
-                $satInfo[$data['jybh']]['unkonwn'] = $satInfo[$data['jybh']]['unkonwn'] + $data['num'];
-            }
-        }*/
         $res['total'] = $total;
         $res['rows'] = array_values($satInfo);
-        $this->ajaxReturn($res);
+        $this->saveExcel($res); //监测是否为导出
+        $this->ajaxReturn(g2us($res));
     }
     /**
      * 按部门统计
@@ -339,9 +312,9 @@ class MediaController extends CommonController
             $userAreas[] = $currentUserArea['areaid'];
         }
         $areaids = explode(',',session('userarea'));
+        $areadb = D($this->models['area']);
         $parent = array(0);             //父级部门ID
         if($mooDarea != ''){
-            $areadb = D($this->models['area']);
             $parent = (array)$areadb->where('areaid='.$mooDarea)->getField('fatherareaid');
             $show = $action->carea($areaid);
             //需要查询的数据
@@ -355,7 +328,7 @@ class MediaController extends CommonController
             $showWhere['areaid'][] = array('EQ',$areaid);
         }
         $showWhere['areaid'][] = 'OR';
-        $initInfos = $areadb->field('areaid,areaname,fatherareaid')->where($showWhere)->select();
+        $initInfos = $areadb->field('areaid,areaname,fatherareaid as _parentId')->where($showWhere)->select();
         $satInfo = array();
         $initShow = array('num'=>0,'video'=>0,'picture'=>0,'vioce'=>0,
                           'unkonwn'=>0,'nomark'=>0,'ismark'=>0,'wjcd'=>0,'name'=>'');
@@ -398,8 +371,12 @@ class MediaController extends CommonController
         unset($fields['nomark']);
         $fields['ismark'] = 'num';
         $satInfo = $this->pares_data($satInfo,$datay,$fields,$markField,$paresFields,$doOneFileds);
+        //倒叙排序 确保上级菜单 在最后执行
+        $satInfo = $this->ksort_sat_data($satInfo,'_parentId',array_keys($initShow),$parent[0]);
         $res['total'] = count($userAreas);
         $res['rows'] = array_values($satInfo);
+        $res = g2us($res);
+        $this->saveExcel($res); //监测是否为导出
         $this->ajaxReturn($res);
     }
     //异常数据
@@ -456,5 +433,28 @@ class MediaController extends CommonController
         $this->write_log('删除文件'.$request['wjbh'],$this->logContent);
         $this->ajaxReturn($result);
     }
-
+    /**
+     * 按照需求上下级进行数据叠加
+     * @param  array $data   [id]=>['id'=>id,'num'=>num,'pid'=>pid]
+     * @param  string $pidFiled pid字段
+     * @param  array $fields 需要叠加的字段
+     * @return array         格式化之后的数据
+     */
+    public function ksort_sat_data($data,$pidFiled,$fields,$root)
+    {
+        krsort($data);
+        foreach ($data as $key => $value) {
+            $checkArr[$value[$pidFiled]][] = $key;
+        }
+        foreach ($data as $key => $value) {
+            if($data[$key]['_parentId'] == $root)  unset($data[$key]['_parentId']);
+            if(empty($checkArr[$key])) continue;
+            foreach ($checkArr[$key] as $val) {
+                foreach ($fields as $field) {
+                    $data[$key][$field] = $data[$key][$field]+$data[$val][$field];
+                }
+            }
+        }
+        return $data;
+    }
 }

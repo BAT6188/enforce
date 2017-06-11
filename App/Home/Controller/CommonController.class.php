@@ -239,4 +239,108 @@ class CommonController extends Controller {
         $where[$field][] = 'OR';
         return $where;
     }
+    /**
+     * 根据数据生成excel保存到服务器 返回保存地址
+     * @param  array $rows  数据
+     * @param  string $sysContent 系统日志
+     * @return string        文件地址
+     */
+    public function saveExcel($data,$sysContent)
+    {
+        if(!I('export',false))  return false;
+
+        $fields = I('fields');               //field name
+        if($data['total'] && $data['total'] > 0){
+            //表格查询处理
+            if(array_key_exists('rows', $data)){
+                $rows = $data['rows'];
+            }
+            $columnTotal = count($fields);
+            //生成需要设置的列
+            $first = 'A';
+            for ($i=0; $i < $columnTotal; $i++) {
+                $abcArr[] = $first;
+                $first++;
+            }
+            //导出Excel表格
+            Vendor('PHPExcel.PHPExcel');
+            Vendor('PHPExcel.PHPExcel.Writer.Excel2007');
+            /*import('Org.PHPExcel.PHPExcel');
+            import('Org.PHPExcel.PHPExcel.Writer.Excel2007');*/
+            /* 实例化类 */
+            $objPHPExcel = new \PHPExcel();
+            /* 设置输出的excel文件为2007兼容格式 */
+            $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+            /* 设置当前的sheet */
+            $objPHPExcel->setActiveSheetIndex(0);
+            $objActSheet = $objPHPExcel->getActiveSheet();
+            /*设置宽度*/
+            foreach ($abcArr as $abc) {
+                $objPHPExcel->getActiveSheet()->getColumnDimension($abc)->setWidth(15);
+            }
+            /* sheet标题 */
+            $sheetTitle = 'title1';
+            $objActSheet->setTitle($sheetTitle);
+            $excelFileName = date('YmdHis').rand(10,99);
+            //第一行字体及颜色
+            $objStyle1 = $objActSheet->getStyle('1');
+            $objFont1 = $objStyle1->getFont();
+            $objFont1->setName('黑体');
+            $objFont1->setSize(12);
+            $col = $fields;
+            $cols = array_values($col);
+            $colks = array_keys($col);
+            //设置投行标题
+            foreach ($abcArr as $key => $abc) {
+                $objActSheet->setCellValue($abc.'1',$cols[$key]);
+                $cola[$abc] = $colks[$key];
+            }
+            //填充数据
+            $data = $rows;
+            $i = 2;
+            foreach($data as $value)
+            {
+                /* excel文件内容 */
+                $j = 'A';
+                foreach ($value as $key=>$val) {
+                    $objActSheet->setCellValue($j.$i,$value[$cola[$j]]);
+                    $j++;
+                }
+                $i++;
+            }
+            $id = session('id');
+            $dateDir = './Public/download/'.date('Ymd');
+            if(!is_dir($dateDir))   mkdir($dateDir);
+            
+            $url = $dateDir."/repWork_".$excelFileName."{$id}.xlsx";
+            //echo $url;
+            try
+            {
+                $objWriter->save($url);
+                $url = substr($url, 1);
+                $host = isset($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : (    isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : C('DB_HOST'));
+                $res = 'http://'.$host.__ROOT__.$url;
+            }
+            catch(Exception $e)
+            {
+                $res = false;
+            }
+            if($res){
+                $result['status'] = true;
+                $result['message'] = '成功。';
+                $result['fileUrl'] = $res;
+                $this->ajaxReturn($result);
+            }else{
+                $result['status'] = false;
+                $result['message'] = '可能原因：服务器权限不足。';
+                $result['fileUrl'] = $res;
+                $this->ajaxReturn($result);
+            }
+        }else{
+            $result['status'] = false;
+            $result['message'] = '获取数据失败，或者没有数据。';
+            $result['fileUrl'] = '';
+            $this->ajaxReturn($result);
+        }
+    }
 }
