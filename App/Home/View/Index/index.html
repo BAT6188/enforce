@@ -10,15 +10,15 @@
 </block>
 <block name="main">
 <div class="easyui-layout" fit="true">
-	<div data-options="region:'north',border:false,split:false" style="height:100px;">
-		<div style="background: url(__PUBLIC__/image/logo.png) no-repeat center; height: 100px; width: 100%">
+	<div data-options="region:'north',border:false,split:false" style="height:80px;">
+		<div style="background: url(__PUBLIC__/image/logo.png) no-repeat left; height: 80px; width: 100%">
             <div id="top_info">
-                <span style="color: #0E2D5F;position: absolute;top: 15px;right: 170px;font-size: 15px">用户：{:session('user')}</span>
-                <span style="color: #0E2D5F;position: absolute;top: 15px;right: 280px;font-size: 15px">角色：{:session('role')}</span>
+                <span style="color: silver;position: absolute;top: 15px;right: 170px;font-size: 15px">用户：{:session('user')}</span>
+                <span style="color: silver;position: absolute;top: 15px;right: 280px;font-size: 15px">角色：{:session('role')}</span>
                 <a href="javascript:void(0)" id="changePassword" class="easyui-linkbutton" data-options="iconCls:'icon-pencil'" style="background-color:#00A8E9; position: absolute;top: 10px;right: 80px;">修改密码</a>
                 <a href="{:U('Index/loginout')}" class="easyui-linkbutton" data-options="iconCls:'icon-drive_go'" style="background-color:#00A8E9; position: absolute;top: 10px;right: 10px;">退出</a>
             </div>
-			<div style="position: absolute;top: 80px;left: 20px;">
+			<div style="position: absolute;top: 60px;right: 20px;">
 				<foreach name="menus" item="menu">
 					<a href="javascript:void(0)" id="menuList" class="easyui-menubutton" style="background-color: #E0ECFF;"
         				data-options="menu:'#m_{$menu.id}',iconCls:'{$menu.iconCls}'">{$menu.text}</a>

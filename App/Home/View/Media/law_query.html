@@ -7,11 +7,19 @@ app.tp.areaid = "{:$areaid}";
 app.tp.areaname = "{:$areaname}";
 </script>
 <script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
-<script type="text/javascript" src="__PUBLIC__/js/Media/work_sat.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/Time.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/Media/law_query.js"></script>
 </block>
 <block name="main">
 <div class="easyui-layout" fit="true">
     <div data-options="region:'west',title:'所有部门',iconCls:'icon-drive',split:false" style="width:20%;background:#eee;">
+        <div class="search-box">
+            警员：<input class="easyui-textbox" data-options="height:22"  style="width:168px"/>
+        </div>
+        <div class="search-box">
+            部门：<input class="easyui-textbox" data-options="height:22"  style="width:168px"/>
+        </div>
+
         <ul id="area_list"></ul>
     </div>
     <div data-options="region:'center',border:false,iconCls:'icon-film'" style="width:60%;background:#eee;">
@@ -20,13 +28,52 @@ app.tp.areaname = "{:$areaname}";
 </div>
 <div id="toolbar">
     <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
-        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="module.show()">全部</a>&nbsp;&nbsp;&nbsp;
-                姓名: <input id="name"  class="easyui-textbox" data-options="height:22"  style="width:168px"/>
-        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="module.search()">搜索</a>
-        <a href="javascript:void(0)" class="easyui-linkbutton"
-        data-options="iconCls:'icon icon-drive'" style="float: right;color:#0E5AB9;">
-        当前部门：<span id="mu_ser">无</span></a>
+        <div class="search-box search-big">
+            <div class="search-text">拍摄时间:</div>
+            <input class="easyui-datetimebox" data-options="height:22,editable:false" name="start_time[btime]" style="width:168px"/>
+            <div class="search-text">至:</div>
+            <input class="easyui-datetimebox" data-options="height:22,editable:false" name="start_time[etime]" style="width:168px"/>
+            <div class="search-text">文件类型: </div>
+            <select class="easyui-combobox" data-options="height:22,editable:false"
+                    name="wjlx" style="width:181px">
+                <option value="">全部</option>
+                <option value="1">视频</option>
+                <option value="2">音频</option>
+                <option value="3">图片</option>
+                <option value="0">未知</option>
+            </select>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="module.search()">搜索</a>
+        </div>
+        <div class="search-box search-big">
+            <div class="search-text">上传时间:</div>
+            <input class="easyui-datetimebox" data-options="height:22,editable:false" name="scsj[btime]" style="width:168px"/>
+            <div class="search-text">至:</div>
+            <input class="easyui-datetimebox" data-options="height:22,editable:false" name="scsj[etime]" style="width:168px"/>
+            <div class="search-text">标注类型:</div>
+            <select class="easyui-combobox" data-options="height:22,editable:false"
+                    name="bzlx" style="width:181px">
+                <option value="">全部</option>
+                <option value="1">典型案例</option>
+            </select>
+             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="module.search()">导出</a>
+        </div>
+        <div class="search-box search-big">
+            <div class="search-text">文件别名:</div>
+            <input class="easyui-textbox" data-options="height:22"  style="width:168px" name="wjbm"/>
+            <div class="search-text">文件备注:</div>
+            <input class="easyui-textbox" data-options="height:22"  style="width:168px" name="mark"/>
+            <div class="search-text">视频类型:</div>
+            <select class="easyui-combobox" data-options="height:22,editable:false"
+                    name="video_type" style="width:181px">
+                <option value="">全部</option>
+                <option value="1">酒驾</option>
+                <option value="2">事故</option>
+                <option value="3">毒驾</option>
+                <option value="4">违法</option>
+                <option value="9">其他</option>
+            </select>
+             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="module.search()">重置</a>
+        </div>
     </form>
-
 </div>
 </block>

@@ -12,9 +12,9 @@ class PeData:
         self.cursor = self.db.cursor()
     def get_one_emp_area(self):
         sql = """
-        SELECT code,name,e.areaid,areaname,cpxh 
+        SELECT code,name,e.areaid,areaname,cpxh
         FROM employee as e ,area_dep as a,pe_base as p
-        WHERE empid >= (SELECT MAX(empid) FROM employee) * RAND() 
+        WHERE empid >= (SELECT MAX(empid) FROM employee) * RAND()
         AND a.areaid=e.areaid AND e.code = p.jybh
         """
         try:
@@ -29,20 +29,20 @@ class PeData:
            print('获取警员信息发生错误')
            return False
     def get_one_ws(self):
-        sql='select gzzbh,gzz_ip from ws_base'
+        sql='select gzz_ip from ws_base'
         try:
            # 执行sql语句
            self.cursor.execute(sql)
            result = self.cursor.fetchall()
            info = random.choice(result)
-           return info[0],info[1]
+           return info[0]
         except:
            # 如果发生错误则回滚
            print('获取工作站信息发生错误')
-           return False       
+           return False
     def getInsertInfo(self):
         code,name,areaid,areaname,cpxh = self.get_one_emp_area()
-        gzzbh,gzz_ip = self.get_one_ws()
+        gzz_ip = self.get_one_ws()
         tempeTime = time.time()-24*60*60
         tempbTime = time.time()-7*24*60*60
         start_time = random.randrange(int(tempbTime),int(tempeTime))
@@ -61,14 +61,14 @@ class PeData:
         tempst2 = time.strftime('%Y%m%d%H%M%S', time.gmtime(start_time))
         wjbh = cpxh+'@'+tempst2+str(random.randrange(60*60,18*60*60))
         ccwz = 'pe_video/data/'+str(start_time)+'/'+wjbh
-        bfwz = 'http://'+self.host+ccwz
+        bfwz = 'http://'+self.host+'/'+ccwz
         start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(start_time))
         upload = random.randrange(0,2)
         insertList['jybh'] = code   #警员编号
         insertList['jyxm'] = name   #警员姓名
         insertList['areaid'] = areaid   #部门ID
         insertList['areaname'] = areaname   #部门名称
-        insertList['gzzbh'] = gzzbh    #工作站编号
+        #insertList['gzzbh'] = gzzbh    #工作站编号
         insertList['gzz_ip'] = gzz_ip #工作站IP
         insertList['wjbh'] = wjbh    #文件编号
         insertList['start_time'] = start_time  #开始时间

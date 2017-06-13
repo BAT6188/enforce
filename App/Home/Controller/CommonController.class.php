@@ -233,6 +233,15 @@ class CommonController extends Controller {
     public function where_key_or($data,$field)
     {
         $where = array();
+        $count = count($data);
+        if($count == 0){
+            $where[$field] = '';
+            return $where;
+        }
+        if($count == 1){
+            $where[$field] = $data[0];
+            return $where;
+        }
         foreach ($data as $value) {
             $where[$field][] = array('EQ',$value);
         }
@@ -311,7 +320,7 @@ class CommonController extends Controller {
             $id = session('id');
             $dateDir = './Public/download/'.date('Ymd');
             if(!is_dir($dateDir))   mkdir($dateDir);
-            
+
             $url = $dateDir."/repWork_".$excelFileName."{$id}.xlsx";
             //echo $url;
             try

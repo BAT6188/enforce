@@ -24,7 +24,16 @@ class MediaController extends CommonController
         $db = D($this->models['pe_video_list']);
         $where['wjbh'] = u2g($wjbh);
         $videoInfo = $db->where($where)->find();
-        $this->assign('videoInfo',$videoInfo);
+        $video_type = array(1=>'酒驾',2=>'事故',3=>'毒驾',4=>'违法',9=>'其他');
+        $fileType = array(0=>'未知',1=>'视频',2=>'音频',3=>'图片');
+        $videoInfo['video_type_name'] = array_key_exists($videoInfo['video_type'],$video_type) ?
+                                        $video_type[$videoInfo['video_type']] : '未知';
+        $videoInfo['bzlx_name'] = $videoInfo['bzlx'] == 1 ? '典型案例' : '-';
+        $videoInfo['wjlx_name'] = array_key_exists($videoInfo['wjlx'],$fileType) ? $fileType[$videoInfo['wjlx']] : '未知';
+        $videoInfo['video_type_name'] = u2g($videoInfo['video_type_name']);
+        $videoInfo['bzlx_name'] = u2g($videoInfo['bzlx_name']);
+        $videoInfo['wjlx_name'] = u2g($videoInfo['wjlx_name']);
+        $this->assign('videoInfo',g2us($videoInfo));
         $this->display('play_video');
     }
     public function show_sat()
@@ -88,13 +97,8 @@ class MediaController extends CommonController
         }
         $db = D($this->models['pe_video_list']);
         //检索文件是不要用in  没有索引是全文检索  速度会很慢
-        foreach ($allowCodes as $allowCode) {
-            $where['jybh'][] = array('EQ',$allowCode);
-        }
-        $where['jybh'][] = 'OR';
-
+        $where = $this->where_key_or($allowCodes,'jybh');
         if($field != '')  $db = $db->field($field);
-
         $data = $db->where($where)->group($group)->order($order)->select();
         $data['emps'] = $allowCodes;
         return $data;
@@ -106,20 +110,18 @@ class MediaController extends CommonController
      */
     public function emps_s_info($areaid='')
     {
-        if(!S(session('user').'search_area'.$areaid) || !S(session('user').'total')){
+        if(!S(session('user').'search_area'.$areaid)){
             $action = A($this->actions['employee']);
             $emps = $action->get_manger_emp($areaid);
             $allowCodes = array_keys($emps);
             //根据登录用户，检索区域，保存缓存5分钟
             S(session('user').'search_area'.$areaid,$allowCodes,5*60);
-            $total = count($allowCodes);
-            S(session('user').'total',$total,5*60);
         }else{
-            $total = S(session('user').'total');
             $allowCodes = S(session('user').'search_area'.$areaid);
         }
-        $res['total'] = $total;
+        $res['total'] = count($allowCodes);
         $res['allowCodes'] = $allowCodes;
+
         return $res;
     }
      /**
@@ -136,19 +138,21 @@ class MediaController extends CommonController
     {
         $empsinfo = $this->emps_s_info($areaid);
         if($empsinfo['total'] <1){
-            $res['error'] = '没有可统计的警员';
+            $res['error'] = u2g('没有可统计的警员');
             return $res;
         }
         $total = $empsinfo['total'];
         $allowCodes = $empsinfo['allowCodes'];
         if($jybh != ''){
+            echo 1;
             $jybh = explode(',', $jybh);
             $allowCodes = array_intersect($jybh,$allowCodes);
         }
-        if(!empty($allowCodes)){
-            $data['error'] = '没有警员信息可查看';
+        if(empty($allowCodes)){
+            $data['error'] = u2g('没有警员信息可查看');
             return $data;
         }
+
         $db = D($this->models['pe_video_list']);
         foreach ($allowCodes as $allowCode) {
             $where['jybh'][] = array('EQ',$allowCode);
@@ -170,8 +174,6 @@ class MediaController extends CommonController
         }
         $where['jybh'][] = 'OR';
         $data = $db->where(u2gs($where))->group($group)->order($order)->select();
-
-        //echo $db->getLastSql()."<br>";
         return $data;
     }
     //部门统计
@@ -179,13 +181,8 @@ class MediaController extends CommonController
     {
         $db = D($this->models['pe_video_list']);
         if($field != '')  $db = $db->field($field);
-        foreach ($areaids as $areaid) {
-            $where['areaid'][] = array('EQ',$areaid);
-        }
-        $where['areaid'][] = 'OR';
+        $where = $this->where_key_or($areaids,'areaid');
         $data = $db->where(u2gs($where))->group($group)->order($order)->select();
-
-        //echo $db->getLastSql()."<br>";
         return $data;
     }
     /**
@@ -301,8 +298,6 @@ class MediaController extends CommonController
                                                          'vioce'=>2,
                                                          'picture'=>3,
                                                          'unkonwn'=>0)));
-        //$doOneFileds = array('areaname'=>'areaname');
-        //$this->ajaxReturn(g2us($dataw));
         $satInfo = $this->pares_data($satInfo,$dataw,$fields,$markField,$paresFields);
         unset($fields['nomark']);
         $fields['ismark'] = 'num';
@@ -333,18 +328,14 @@ class MediaController extends CommonController
         $parent = array(0);             //父级部门ID
         if($mooDarea != ''){
             $parent = (array)$areadb->where('areaid='.$mooDarea)->getField('fatherareaid');
-            $show = $action->carea($areaid);
+            $show = $action->carea($mooDarea);
             //需要查询的数据
-            $areaids = array_intersect($areaids,$show);
+            $areaids = array_intersect($show,$areaids);
             //页面需要显示的数据
-            $userAreas = array_intersect($userAreas,$show);
+            $userAreas = array_intersect($show,$userAreas);
         }
         //准备初始化的显示数据
-        $showWhere = array();
-        foreach ($userAreas as $areaid) {
-            $showWhere['areaid'][] = array('EQ',$areaid);
-        }
-        $showWhere['areaid'][] = 'OR';
+        $showWhere = $this->where_key_or($userAreas,'areaid');
         $initInfos = $areadb->field('areaid,areaname,fatherareaid as _parentId')->where($showWhere)->select();
         $satInfo = array();
         $initShow = array('num'=>0,'video'=>0,'picture'=>0,'vioce'=>0,
@@ -354,10 +345,7 @@ class MediaController extends CommonController
             $satInfo[$initInfo['areaid']] = $initInfo;
         }
         //准备查询数据
-        foreach ($areaids as $areaid) {
-            $where['areaid'][] = array('EQ',$areaid);
-        }
-        $where['areaid'][] = 'OR';
+        $where = $this->where_key_or($areaids,'areaid');
         $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));
         $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));
         $request['unusual'] = I('unusual',false);       //异常数据请求
@@ -398,9 +386,8 @@ class MediaController extends CommonController
         $satInfo = $this->ksort_sat_data($satInfo,'_parentId',array_keys($initShow),$parent[0]);
         $res['total'] = count($userAreas);
         $res['rows'] = array_values($satInfo);
-        $res = g2us($res);
         $this->saveExcel($res); //监测是否为导出
-        $this->ajaxReturn($res);
+        $this->ajaxReturn(g2us($res));
     }
     /**
      * 异常数据where条件定义
@@ -440,6 +427,16 @@ class MediaController extends CommonController
         $where['start_time'][] = array('EGT',$request['btime']);
         $where['start_time'][] = array('ELT',$request['etime']);
         $data = $this->media_info_list($where,$page,$rows,$areaid,'start_time desc',$jybh);
+        $video_type = array(1=>'酒驾',2=>'事故',3=>'毒驾',4=>'违法',9=>'其他');
+        $fileType = array(0=>'未知',1=>'视频',2=>'音频',3=>'图片');
+        foreach ($data['rows'] as &$value) {
+            $value['video_type_name'] = array_key_exists($value['video_type'],$video_type) ? $video_type[$value['video_type']] : '未知';
+            $value['bzlx_name'] = $value['bzlx'] == 1 ? '典型案例' : '-';
+            $value['wjlx_name'] = array_key_exists($value['wjlx'],$fileType) ? $fileType[$value['wjlx']] : '未知';
+            $value['video_type_name'] = u2g($value['video_type_name']);
+            $value['bzlx_name'] = u2g($value['bzlx_name']);
+            $value['wjlx_name'] = u2g($value['wjlx_name']);
+        }
         $this->ajaxReturn(g2us($data));
     }
     //数据更新
@@ -487,5 +484,14 @@ class MediaController extends CommonController
             }
         }
         return $data;
+    }
+    //视频操作日志
+    public function video_action()
+    {
+        $action = I('action');      //1下载 //2播放
+        $wjbh = I('wjbh');
+        $action = $action == 1 ? '下载' : '播放';
+        $this->write_log($action.$wjbh);
+        exit;
     }
 }

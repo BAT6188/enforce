@@ -1,21 +1,29 @@
 <extend name="layouts:master" />
-<block name="link"></block>
-<block name="src"></block>
+<block name="link">
+    <style>
+        body{
+            background-color: #eee;
+        }
+    </style>
+</block>
+<block name="src">
+    <script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/js/Trees.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/js/PlayVlc.js"></script>
+</block>
 <block name="main">
-<!-- <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org"
-       width="600" height="400" id="vlc"  /> -->
-<object classid="clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921" '+
-        codebase="http://download.videolan.org/pub/videolan/vlc/last/win32/axvlc.cab"
-        id="vlc" width="600" height="400">
-    <param name="autostart" value="true" />
-    <param name="allowfullscreen" value="false" />
-</object>
-<script language="Javascript">
-    var vlc = document.getElementById("vlc");
-    var mrl="__PUBLIC__/data/1000819_20160728092122_N_20160728092622.mov";
-    //将地址添加到播放列表
-    vlc.playlist.add(mrl);
-    //播放
-    vlc.playlist.play();
-</script>
+    <div id="con" style="margin: 0 auto;width: 640px;height: 360px"></div>
+    <div class="easyui-panel" data-options="title:'视频详情'" style="">
+        <a href="">下载视频</a>
+        <a href="">下载插件</a>
+        <div>视频文件</div>
+        <div>视频别名</div>
+        <div>视频长度</div>
+        <div>拍摄时间</div>
+        <div>上传时间</div>
+        <div>视频类型</div>
+        <div>标注类型</div>
+        <div>拍摄民警</div>
+        <div>所属部门</div>
+    </div>
 </block>

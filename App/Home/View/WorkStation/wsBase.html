@@ -1,0 +1,94 @@
+<extend name="layouts:master" />
+<block name="link"></block>
+<block name="src">
+<script type="text/javascript" src="__PUBLIC__/js/WorkStation/wsBase.js"></script>
+</block>
+<block name="main">
+	<table id="datagrid" toolbar="#toolbar"></table>
+    <div id="toolbar">
+        <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
+             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="things.show()">全部</a>&nbsp;&nbsp;&nbsp;
+            地址: <input id='dzInput'  class="easyui-textbox" data-options="height:22"  style="width:168px"/>
+            负责人: <input id='hzrInput'  class="easyui-textbox" data-options="height:22"  style="width:168px"/>
+            在线状态:
+            <select id='zxztInput' class="easyui-combobox form_in" name="zxzt" style="width: 181px;"data-options="editable:false">
+              <option value="0">未启用</option>
+              <option value="1">启用</option>
+            </select>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="things.search()">搜索</a>
+        </form>
+        <a href="javascript:void(0)" onclick="things.addBar()" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a>
+        <a href="javascript:void(0)" onclick="things.editBar()" class="easyui-linkbutton" data-options="iconCls:'icon icon-edit',plain:true">修改</a>
+        <a href="javascript:void(0)" onclick="things.remove()" class="easyui-linkbutton" data-options="iconCls:'icon icon-delete',plain:true">
+        删除</a>
+    </div>
+<!-- 增加 -->
+    <div id="addDialog" class="easyui-dialog" title="添加" buttons="#addButtons"
+    data-options="iconCls:'icon-add',resizable:true,modal:true,closed:true">
+    	<form id="addForm" method="post">
+    		<div class="form_m">
+          <div for="name" class="form_label">工作站IP:</div>
+    			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="gzz_ip" data-options="required:true" />
+        </div>
+    		<div class="form_m">
+          <div for="name" class="form_label">地址:</div>
+    			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="dz" />
+        </div>
+        <div class="form_m">
+          <div for="name" class="form_label">负责人:</div>
+    			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="hzr" />
+        </div>
+        <div class="form_m">
+          <div for="name" class="form_label">负责人电话:</div>
+    			<input class="easyui-validatebox form_in easyui-textbox" type="text" name="dh" />
+        </div>
+        <div class="form_m">
+          <div for="type" class="form_label">启用状态:</div>
+          <select class="easyui-combobox form_in" name="qyzt" style="width: 181px;"
+                  data-options="editable:false">
+              <option value="0">未启用</option>
+              <option value="1">启用</option>
+          </select>
+        </div>
+    	</form>
+    </div>
+    <div id="addButtons">
+    	<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="things.add()" style="width:90px">确认</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#addDialog').dialog('close')" style="width:90px">取消</a>
+    </div>
+<!-- 修改 -->
+    <div id="editDialog" class="easyui-dialog" title="修改" buttons="#editButtons"
+    data-options="iconCls:'icon-add',resizable:true,modal:true,closed:true">
+        <form id="editForm" method="post">
+            <input type="hidden" name="id" />
+            <div class="form_m">
+              <div for="name" class="form_label">工作站IP:</div>
+              <input class="easyui-validatebox form_in easyui-textbox" type="text" name="gzz_ip" data-options="required:true" />
+            </div>
+            <div class="form_m">
+              <div for="name" class="form_label">地址:</div>
+              <input class="easyui-validatebox form_in easyui-textbox" type="text" name="dz" />
+            </div>
+            <div class="form_m">
+              <div for="name" class="form_label">负责人:</div>
+              <input class="easyui-validatebox form_in easyui-textbox" type="text" name="hzr" />
+            </div>
+            <div class="form_m">
+              <div for="name" class="form_label">负责人电话:</div>
+              <input class="easyui-validatebox form_in easyui-textbox" type="text" name="dh" />
+            </div>
+            <div class="form_m">
+              <div for="type" class="form_label">启用状态:</div>
+              <select class="easyui-combobox form_in" name="qyzt" style="width: 181px;"
+                      data-options="editable:false">
+                  <option value="0">未启用</option>
+                  <option value="1">启用</option>
+              </select>
+            </div>
+        </form>
+    </div>
+    <div id="editButtons">
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="things.edit()" style="width:90px">确认</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#editDialog').dialog('close')" style="width:90px">取消</a>
+    </div>
+</block>

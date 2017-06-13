@@ -36,6 +36,7 @@ class WorkStationController extends CommonController
         $data = $db->getTableList(u2gs($where),$page,$rows);
         foreach ($data['rows'] as &$value) {
             $value['zxztname'] = $value['zxzt'] == 0 ? u2g('离线') : u2g('在线');
+            $value['qyztname'] = $value['zxzt'] == 0 ? u2g('停用') : u2g('启用');
         }
         $this->ajaxReturn(g2us($data));
     }
@@ -43,7 +44,7 @@ class WorkStationController extends CommonController
     public function ws_base_add()
     {
         $request['qyzt'] = I('qyzt');     //启用状态 0:未启用，1：启用
-        $request['gzzbh']    = I('gzzbh');        //    工作站编号  必填
+        //$request['gzzbh']    = I('gzzbh');        //    工作站编号  必填
         $request['gzz_ip']    = I('gzz_ip');        //工作站IP     必填
         $request['dz']    = I('dz'); //地址
         $request['hzr']    = I('hzr');        //负责人
@@ -56,8 +57,9 @@ class WorkStationController extends CommonController
     //工作站
     public function ws_base_edit()
     {
+        $request['id'] = I('id');     //启用状态 0:未启用，1：启用
         $request['qyzt'] = I('qyzt');     //启用状态 0:未启用，1：启用
-        $request['gzzbh']    = I('gzzbh');        //    工作站编号  必填
+        //$request['gzzbh']    = I('gzzbh');        //    工作站编号  必填
         $request['gzz_ip']    = I('gzz_ip');        //工作站IP     必填
         $request['dz']    = I('dz');            //地址
         $request['hzr']    = I('hzr');        //负责人
@@ -69,8 +71,8 @@ class WorkStationController extends CommonController
     //工作站
     public function ws_base_remove()
     {
-        $cpxh = I('cpxh');                  //产品序号
-        $request['cpxh'] = array('in',u2g($cpxh));
+        $cpxh = I('id');
+        $request['id'] = array('in',u2g($cpxh));
         $db =  D($this->models['wsbase']);
         $result = $db->getTableDel($where);
         $this->write_log('删除工作站',$this->logContent);
