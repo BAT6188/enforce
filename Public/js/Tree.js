@@ -1,13 +1,17 @@
 var Tree = function(dom){
     this.dom = dom;
 }
-Tree.prototype.loadData = function (){
+Tree.prototype.loadData = function (noS){
     var self = this;
     var dom = this.dom;
+    var load = typeof noS == 'undefined' ? false : noS;
     $.ajax({
         url:app.url('Area/data_tree_list')+'?&rand='+Math.random(),
         type:'get',
         dataType:'json',
+        data:{
+            new:load
+        },
         success:function(data){
             $(dom).tree('loadData',data);
         }

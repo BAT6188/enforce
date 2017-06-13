@@ -17,18 +17,13 @@ class DevController extends CommonController
     public function pe_base_show()
     {
         $this->assignInfo();
-        $this->display('pe_base_show');
+        $this->display('peBase');
     }
     //执法仪状态
     public function pe_show_status()
     {
        $this->assignInfo();
-       $this->display('pe_show_status');
-    }
-    //执法仪统计
-    public function pe_sat()
-    {
-        $this->display('pe_sat');
+       $this->display('peShowStatus');
     }
     //执法记录仪
     public function pe_base_list()
@@ -66,11 +61,25 @@ class DevController extends CommonController
                 $cpxhs[] = $value['cpxh'];
             }
             $res = $this->get_pe_base_status($cpxhs);
+            $data['active'] = 0;    //活跃数量
+            $data['use'] = 0;       //使用率低
+            $data['disuse'] = 0;    //停用
             //$this->ajaxReturn($res);
             foreach ($data['rows'] as &$value) {
                 $value['times'] = $res[$value['cpxh']];     //七天内的使用次数
-                //0:停用 1:使用率底 2:活跃
-                $value['status'] = $res[$value['cpxh']] 0 ? $res[$value['cpxh']] > 4 ? 2 : 1 : 0;
+                //0:停用 1:使用率低 2:活跃
+                if($res[$value['cpxh']] > 0){
+                    if($res[$value['cpxh']] > 4){
+                        $data['active'] = $data['active']+1;
+                        $value['status'] = 2;
+                    }else{
+                        $data['use'] = $data['use']+1;
+                        $value['status'] = 1;
+                    }
+                }else{
+                    $data['disuse'] = $data['disuse']+1;
+                    $value['status'] = 0;
+                }
             }
         }
         $this->ajaxReturn(g2us($data));

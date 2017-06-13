@@ -1,0 +1,32 @@
+<extend name="layouts:master" />
+<block name="link">
+    <style>
+        #form{
+            width: 100%;
+            min-width: 1230px;
+            margin: 5px;
+        }
+        #form label{
+            vertical-align: middle;
+        }
+    </style>
+</block>
+<block name="src">
+    <script type="text/javascript">
+    </script>
+    <script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/js/Time.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/js/Log/peLog.js"></script>
+</block>
+<block name="main">
+    <table id="datagrid"></table>
+    <div id="toolbar">
+        <form id="form">
+            <a id="all" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true">全部</a>
+            <label>操作日期：</label>
+            <input class="easyui-datetimebox" name="btime" id="btime"/>
+            <input class="easyui-datetimebox" name="etime" id="etime"/>
+            <a id="searching" class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true">搜索</a>
+        </form>
+    </div>
+</block>

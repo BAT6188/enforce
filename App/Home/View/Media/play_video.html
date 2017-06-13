@@ -1,0 +1,21 @@
+<extend name="layouts:master" />
+<block name="link"></block>
+<block name="src"></block>
+<block name="main">
+<!-- <embed type="application/x-vlc-plugin" pluginspage="http://www.videolan.org"
+       width="600" height="400" id="vlc"  /> -->
+<object classid="clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921" '+
+        codebase="http://download.videolan.org/pub/videolan/vlc/last/win32/axvlc.cab"
+        id="vlc" width="600" height="400">
+    <param name="autostart" value="true" />
+    <param name="allowfullscreen" value="false" />
+</object>
+<script language="Javascript">
+    var vlc = document.getElementById("vlc");
+    var mrl="__PUBLIC__/data/1000819_20160728092122_N_20160728092622.mov";
+    //将地址添加到播放列表
+    vlc.playlist.add(mrl);
+    //播放
+    vlc.playlist.play();
+</script>
+</block>

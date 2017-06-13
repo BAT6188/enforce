@@ -209,26 +209,34 @@ class AreaController extends CommonController
     }
     /**
      * 获取当前用户管理部门
+     * @param boolean $new  是否最新数据 true是  false否
      * @return array easyui-tree
      */
-    public function tree_list()
+    public function tree_list($new=false)
     {
-        $db = D($this->models['area']);
-        $data = $this->all_user_area();
-        $ids = array(0);
-        //$l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr
-        $l_arr = ['areaid','areaname','fatherareaid','areaid'];
-        //$L_attributes 额外需要保存的信息
-        $L_attributes = ['arearcode','rperson','rphone'];
-        $icons = ['icon-map_go','icon-map'];
-        $noclose = $db->where('fatherareaid = 0')->getField('areaid',true);
-        $data_tree = $this->formatTree($ids,$data,$l_arr,$L_attributes,'',$icons,$noclose);
+        if(!S(session('user').'area') || $new){
+            $db = D($this->models['area']);
+            $data = $this->all_user_area();
+            $ids = array(0);
+            //$l_arr 保存菜单的一些信息  0-id  1-text 2-iconCls 3-fid 4-odr
+            $l_arr = ['areaid','areaname','fatherareaid','areaid'];
+            //$L_attributes 额外需要保存的信息
+            $L_attributes = ['arearcode','rperson','rphone'];
+            $icons = ['icon-map_go','icon-map'];
+            $noclose = $db->where('fatherareaid = 0')->getField('areaid',true);
+            $data_tree = $this->formatTree($ids,$data,$l_arr,$L_attributes,'',$icons,$noclose);
+            S(session('user').'area',$data_tree,5*60);
+        }else{
+            $data_tree = S(session('user').'area');
+        }
+
         return $data_tree;
     }
     //前端请求
     public function data_tree_list()
     {
-        $data_tree = $this->tree_list();
+        $new = I('new',false);
+        $data_tree = $this->tree_list($new);
         $this->ajaxReturn(g2us($data_tree));
     }
     /**

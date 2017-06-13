@@ -1,0 +1,86 @@
+<extend name="layouts:master" />
+<block name="link">
+    <style>
+        #form{
+            margin: 5px auto;
+            width: 100%;
+        }
+        #form label{
+            vertical-align: middle;
+        }
+        #pos{
+            float: right;
+            color: #0070a9;
+        }
+        #dialogForm{
+            padding: 10px;
+            width: 300px;
+        }
+        #dialogForm>div{
+            line-height: 22px;
+            margin-bottom: 5px;
+        }
+        .hide{
+            display: none;
+        }
+        #dialog p{
+            margin: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            color:#0052A3;
+        }
+    </style>
+</block>
+<block name="src">
+    <script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/js/Trees.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/js/Dev/peBase.js"></script>
+</block>
+<block name="main">
+    <div class="easyui-layout" fit="true" style="width: 100%;height: 100%;">
+        <div data-options="region:'west',title:'所有部门',iconCls:'icon-drive',split:false" style="width:20%">
+            <ul id="tree"></ul>
+        </div>
+        <div data-options="region:'center'" style="width: 80%">
+            <table id="datagrid"></table>
+            <div id="toolbar">
+                <form id="form">
+                    <div>
+                        <label>生产厂家：</label>
+                        <input class="easyui-textbox" name="product"/>
+                        <label>产品序号：</label>
+                        <input class="easyui-textbox" name="cpxh"/>
+                        <label>警员姓名：</label>
+                        <input class="easyui-textbox" name="jyxm" id="jyxm"/>
+                        <a id="searching" class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true">搜索</a>
+                    </div>
+                    <div>
+                        <a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a>
+                        <a id="edit" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true">修改</a>
+                        <a id="del" class="easyui-linkbutton" data-options="iconCls:'icon-delete',plain:true">删除</a>
+                        <a id="pos" class="easyui-linkbutton" data-options="iconCls:'icon-drive'">当前位置：内蒙古自治区公安局</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!--增加、修改dialog-->
+    <div id="dialog" class="easyui-dialog" data-options="closed:true">
+        <form id="dialogForm">
+            <div class="form_m"><div for="product" class="form_label">生产厂家： </div>
+                <input class="form_in easyui-textbox" type="text" name="product" required="true"/></div>
+            <div class="form_m"><div for="cpxh" class="form_label">产品序号： </div>
+                <input class="form_in easyui-textbox" type="text" name="cpxh" required="true"/></div>
+            <div class="form_m hide"><div for="jyxm" class="form_label">警员姓名： </div>
+                <input class="form_in easyui-textbox" type="text" name="jyxm" required="true"/></div>
+            <div class="form_m"><div for="standard" class="form_label">设备规格： </div>
+                <input class="form_in easyui-textbox" type="text" name="standard" required="true"/></div>
+            <div class="form_m hide"><div for="jybh" class="form_label">警员编号： </div>
+                <input class="form_in easyui-textbox" type="text" name="jybh" required="true"/></div>
+        </form>
+    </div>
+    <div id="dialogBtns">
+        <a id="dialogOk" class="easyui-linkbutton" data-options="iconCls:'icon-ok',plain:true">确定</a>
+        <a id="dialogDel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">取消</a>
+    </div>
+</block>

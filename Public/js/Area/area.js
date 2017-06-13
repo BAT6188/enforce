@@ -56,7 +56,7 @@ module.change_info = function(form,url,dialog){
         success:function(data){
             $(dialog).dialog('close');
             module.callback(data);
-            tree.loadData();
+            tree.loadData(true);    //不使用缓存加载树
         },
         error:function(data){
             $(dialog).dialog('close');

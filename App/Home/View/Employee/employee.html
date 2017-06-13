@@ -11,13 +11,13 @@ app.tp.areaname = "{:$areaname}";
 </block>
 <block name="main">
 <div class="easyui-layout" fit="true">
-        <div data-options="region:'west',title:'所有部门',iconCls:'icon-drive',split:false" style="width:20%;background:#eee;">
-            <ul id="area_list"></ul>
-        </div>
-       <div data-options="region:'center',border:false,iconCls:'icon-film'" style="width:60%;background:#eee;">
-           <table id="datagrid" toolbar="#toolbar"></table>
-       </div>
+    <div data-options="region:'west',title:'所有部门',iconCls:'icon-drive',split:false" style="width:20%;background:#eee;">
+        <ul id="area_list"></ul>
     </div>
+    <div data-options="region:'center',border:false,iconCls:'icon-film'" style="width:60%;background:#eee;">
+        <table id="datagrid" toolbar="#toolbar"></table>
+    </div>
+</div>
     <div id="toolbar">
         <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
              <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="module.show()">全部</a>&nbsp;&nbsp;&nbsp;

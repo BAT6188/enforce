@@ -52,6 +52,7 @@ class EmployeeController extends CommonController
             $data[] = session('code');
         }
         //如果有部门ID  进行检索 找出最终能显示的警员信息
+        $res = array();
         if($areaid != ''){
             $action = A($this->actions['area']);
             //加上检索部门
@@ -62,18 +63,21 @@ class EmployeeController extends CommonController
                 $where['areaid'] = array('in',$reallyareas);
                 $db = D($this->models['employee']);
                 $codes = $db->where($where)->getField('code',true);
+                //查询区域没有数据直接返回空数组
+                if(empty($codes)){
+                    return $res;
+                }else{
+                    //检索出来的，与实际能管理的
+                    $data = array_intersect((array)$codes,$data);
+                }
+            }else{
+                return $res;
             }
-        }
-        if(isset($codes) && !empty($codes)){
-            //检索出来的，与实际能管理的
-            $data = array_intersect($codes,$data);
         }
         $request['code'] = array('in',$data);
         //最终的警员信息
         if(!empty($data)){
             $res = $db->where($request)->getField('code,empid,name');
-        }else{
-            $res = array();
         }
         return $res;
     }

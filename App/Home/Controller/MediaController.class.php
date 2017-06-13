@@ -29,27 +29,35 @@ class MediaController extends CommonController
     }
     public function show_sat()
     {
+        $this->assignInfo();
         $pages = array('work_sat'=>'work_sat',  //工作量统计
                        'lay_sat'=>'lay_sat',    //执法统计
                        'assessmeny_sat'=>'assessmeny_sat',  //考核统计
                        'unusual_sat'=>'unusual_sat');       //异常统计
-        $pege = I('satType','work_sat');
-        $this->display('assessmeny');
+        $page = I('satType','work_sat');
+        $this->display($pages[$page]);
+    }
+    public function assignInfo()
+    {
+        $action = A($this->actions['area']);
+         //如果没有
+        $areaTree = $action->tree_list();
+        $rootId = !empty($areaTree) ? $areaTree[0]['id'] : '';
+        $rootName = !empty($areaTree) ? g2u($areaTree[0]['text']) : '系统根部门';
+        $this->assign('areaid',$rootId);
+        $this->assign('areaname',$rootName);
     }
     //执法查询
     public function law_query()
     {
+        $this->assignInfo();
         $this->display('law_query');
     }
     //典型案列
     public function typical_case()
     {
+        $this->assignInfo();
         $this->display('typical_case');
-    }
-    //数据比对
-    public function data_contrast()
-    {
-        $this->display('data_contrast');
     }
     /**
      * 统计数据，根据权限排除不是自己能管理的警员
@@ -98,17 +106,17 @@ class MediaController extends CommonController
      */
     public function emps_s_info($areaid='')
     {
-        if(!S(session('user').$areaid) || !S(session('user').'total')){
+        if(!S(session('user').'search_area'.$areaid) || !S(session('user').'total')){
             $action = A($this->actions['employee']);
             $emps = $action->get_manger_emp($areaid);
             $allowCodes = array_keys($emps);
             //根据登录用户，检索区域，保存缓存5分钟
-            S(session('user').$areaid,$allowCodes,5*60);
+            S(session('user').'search_area'.$areaid,$allowCodes,5*60);
             $total = count($allowCodes);
             S(session('user').'total',$total,5*60);
         }else{
             $total = S(session('user').'total');
-            $allowCodes = S(session('user').$areaid);
+            $allowCodes = S(session('user').'search_area'.$areaid);
         }
         $res['total'] = $total;
         $res['allowCodes'] = $allowCodes;
@@ -196,7 +204,7 @@ class MediaController extends CommonController
         foreach ($data as $info) {
             if(!empty($doOne)){
                 foreach ($doOne as $k => $value) {
-                    if($init[$info[$mark]][$k] == '') $init[$info[$mark]][$k] = $info[$value];
+                    $init[$info[$mark]][$k] = $info[$value];
                 }
                 unset($k);
             }
@@ -227,10 +235,11 @@ class MediaController extends CommonController
     {
         $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));
         $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));
+        $request['unusual'] = I('unusual',false);       //异常数据请求
         $areaid = I('areaid','');    //部门ID
         $page = I('page',1);
         $rows = I('rows',20);
-        $jybh = I('jybh','');
+        $jybh = I('jybh','');       //支持多民警查询  用,隔开
         $where['start_time'][] = array('EGT',$request['btime']);
         $where['start_time'][] = array('ELT',$request['etime']);
         $ismarkWhere = $where;
@@ -244,6 +253,11 @@ class MediaController extends CommonController
         $ismarkWhere['mark'][] = array('NEQ','无');
         $ismarkWhere['mark'][] = array('NEQ','');
         $ismarkWhere['mark'][] = array('exp','is not null');
+        //异常数据请求
+        if($request['unusual']){
+            $nomarkWhere[] = $this->unusual_where();
+            $ismarkWhere[] = $this->unusual_where();
+        }
         //选择字段
         $field = 'jybh,wjlx,sum(wjcd) as wjcd,count(wjbh) as num,areaname';
         $empsinfo = $this->emps_s_info($areaid);
@@ -253,11 +267,12 @@ class MediaController extends CommonController
         }
         $total = $empsinfo['total'];
         $allowCodes = $empsinfo['allowCodes'];
-        
+
         if($jybh != ''){
             $jybhs = explode(',',$jybh);
             $allowCodes = array_intersect($allowCodes,$jybhs);
         }
+        //print_r($allowCodes);
         //需要检索的数据
         $satEmps = array_slice($allowCodes,($page-1)*$rows,$rows);
         if(empty($satEmps)){
@@ -271,11 +286,12 @@ class MediaController extends CommonController
         //初始化信息 总数，视频，图片，音频，未知，未编辑，已编辑,文件长度
         $initInfo = array('num'=>0,'video'=>0,'picture'=>0,'vioce'=>0,
                           'unkonwn'=>0,'nomark'=>0,'ismark'=>0,'wjcd'=>0,'name'=>'','areaname'=>'');
-        $empInfo = D($this->models['employee'])->getField('code,name');
+        $empInfo = D($this->models['employee'])->getField('code,name,areaid');
+        $areaInfo = D($this->models['area'])->getField('areaid,areaname');
         foreach ($satEmps as $emp) {
             //添加警员
-            $initInfo['name'] = $empInfo[$emp];
-            //$initInfo['areaname'] = '一中队';
+            $initInfo['name'] = $empInfo[$emp]['name'];
+            $initInfo['areaname'] = $areaInfo[$empInfo[$emp]['areaid']];
             $satInfo[$emp] = $initInfo;
         }
         $fields = array('num'=>'num','nomark'=>'num','wjcd'=>'wjcd');
@@ -285,11 +301,12 @@ class MediaController extends CommonController
                                                          'vioce'=>2,
                                                          'picture'=>3,
                                                          'unkonwn'=>0)));
-        $doOneFileds = array('areaname'=>'areaname');
-        $satInfo = $this->pares_data($satInfo,$dataw,$fields,$markField,$paresFields,$doOneFileds);
+        //$doOneFileds = array('areaname'=>'areaname');
+        //$this->ajaxReturn(g2us($dataw));
+        $satInfo = $this->pares_data($satInfo,$dataw,$fields,$markField,$paresFields);
         unset($fields['nomark']);
         $fields['ismark'] = 'num';
-        $satInfo = $this->pares_data($satInfo,$datay,$fields,$markField,$paresFields,$doOneFileds);
+        $satInfo = $this->pares_data($satInfo,$datay,$fields,$markField,$paresFields);
         $res['total'] = $total;
         $res['rows'] = array_values($satInfo);
         $this->saveExcel($res); //监测是否为导出
@@ -343,6 +360,7 @@ class MediaController extends CommonController
         $where['areaid'][] = 'OR';
         $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));
         $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));
+        $request['unusual'] = I('unusual',false);       //异常数据请求
         $where['start_time'][] = array('EGT',$request['btime']);
         $where['start_time'][] = array('ELT',$request['etime']);
         $field = 'areaid,wjlx,sum(wjcd) as wjcd,count(wjbh) as num';
@@ -357,6 +375,11 @@ class MediaController extends CommonController
         $ismarkWhere['mark'][] = array('NEQ','无');
         $ismarkWhere['mark'][] = array('NEQ','');
         $ismarkWhere['mark'][] = array('exp','is not null');
+        //异常数据请求
+        if($request['unusual']){
+            $nomarkWhere[] = $this->unusual_where();
+            $ismarkWhere[] = $this->unusual_where();
+        }
         $dataw = $this->areas_sta($areaids,$nomarkWhere,$field,'wjlx,areaid', 'num desc');
         $datay = $this->areas_sta($areaids,$ismarkWhere,$field,'wjlx,areaid', 'num desc');
         $fields = array('num'=>'num','nomark'=>'num','wjcd'=>'wjcd');
@@ -367,10 +390,10 @@ class MediaController extends CommonController
                                                          'picture'=>3,
                                                          'unkonwn'=>0)));
         //$doOneFileds = array('areaname'=>'areaname');
-        $satInfo = $this->pares_data($satInfo,$dataw,$fields,$markField,$paresFields,$doOneFileds);
+        $satInfo = $this->pares_data($satInfo,$dataw,$fields,$markField,$paresFields);
         unset($fields['nomark']);
         $fields['ismark'] = 'num';
-        $satInfo = $this->pares_data($satInfo,$datay,$fields,$markField,$paresFields,$doOneFileds);
+        $satInfo = $this->pares_data($satInfo,$datay,$fields,$markField,$paresFields);
         //倒叙排序 确保上级菜单 在最后执行
         $satInfo = $this->ksort_sat_data($satInfo,'_parentId',array_keys($initShow),$parent[0]);
         $res['total'] = count($userAreas);
@@ -379,15 +402,16 @@ class MediaController extends CommonController
         $this->saveExcel($res); //监测是否为导出
         $this->ajaxReturn($res);
     }
-    //异常数据
-    public function unusual_sat_list()
+    /**
+     * 异常数据where条件定义
+     * @param  integer $sccs 超时时长
+     * @param  integer $bjcs 编辑时长
+     * @return where语句
+     */
+    public function unusual_where($sccs = 3,$bjcs = 2)
     {
-        $request['btime'] = I('btime',date('Y-m-d H:i:s',time()-7*24*60*60));   //开始时间
-        $request['etime'] = I('etime',date('Y-m-d H:i:s',time()));              //结束时间
-        $areaid = I('areaid','');       //部门ID
-        $jybh = I('jybh','');           //警员编号
-        $data = $this->areas_sta($areaids,$nomarkWhere,$field,'wjlx,areaid', 'num desc');
-
+        $where = array('exp','ABS(timestampdiff(day,now(),scsj)) > '.$sccs.' OR ABS(timestampdiff(day,start_time,scsj)) > '.$bjcs);
+        return $where;
     }
     //媒体数据显示
     public function media_list()
@@ -399,9 +423,16 @@ class MediaController extends CommonController
         $request['wjlx'] = I('wjlx','');            //文件类型
         $request['bzlx'] = I('bzlx','');            //标注类型
         $request['mark'] = I('mark','');        //备注
+        $request['unusual'] = I('unusual',false);   //异常数据请求
         $page = I('page');
         $rows = I('rows');
         $request['video_type'] = I('video_type','');    //视频类型
+        //异常数据请求
+        $where = array();
+        if($request['unusual']){
+            $where[] = $this->unusual_where();
+            $where[] = $this->unusual_where();
+        }
         if($request['video_type'] != '') $where['video_type'] = $request['video_type'];
         if($request['wjlx'] != '') $where['wjlx'] = $request['wjlx'];
         if($request['bzlx'] != '') $where['bzlx'] = $request['bzlx'];

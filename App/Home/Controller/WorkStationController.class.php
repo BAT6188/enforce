@@ -19,8 +19,8 @@ class WorkStationController extends CommonController
     public function ws_base_list()
     {
         $request['dz'] = I('dz');           //地址
-        $request['hzr']    = I('hzr');        //负责人
-        $request['zxzt']    = I('zxzt');        //在线状态,0:不在线，1：在线
+        $request['hzr'] = I('hzr');        //负责人
+        $request['zxzt'] = I('zxzt');        //在线状态,0:不在线，1：在线
         $page = I('page');
         $rows = I('rows');
         $db =  D($this->models['wsbase']);
@@ -82,5 +82,12 @@ class WorkStationController extends CommonController
         $db =  D($this->models['wsbase']);
         $data = $db->field('count(gzzbh) as num,zxzt')->group('zxzt');
         $this->ajaxReturn($data);
+    }
+    //工作站在线，离线统计
+    public function ws_sat()
+    {
+        $db =  D($this->models['wsbase']);
+        $result = $db->field('count(ggzbh) as num,zxzt')->gruop('zxzt')->select();
+        $this->ajaxReturn($result);
     }
 }

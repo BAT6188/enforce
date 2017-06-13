@@ -1,0 +1,85 @@
+<extend name="layouts:master" />
+<block name="link">
+    <style>
+        body{
+            width: 100%;
+            height: 100%;
+        }
+        #d1{
+            margin: 5px auto;
+            /*width: 100%;*/
+            /*height: 100%;*/
+        }
+
+        .d2{
+            display: inline-block;
+            margin: 10px;
+            width:180px;
+            height: 120px;
+            border: 1px solid #0052A3;
+        }
+
+        .p{
+            margin: 0;
+            line-height: 30px;
+            font-size: 15px;
+            text-indent: 10px;
+            background-color: #f4f4f4;
+        }
+        .d3{
+            box-sizing: border-box;
+            moz-box-sizing: border-box;
+            webkit-box-sizing: border-box;
+        }
+        .d41{
+            display: inline-block;
+            width: 30%;
+            padding: 5px;
+            border: 1px solid #0052A3;
+        }
+        .d41 span{
+            display: block;
+        }
+        .form{
+            display: inline-block;
+            padding: 5px;
+            width:55%;
+            line-height: 25px;
+            border: 1px solid #0088CC;
+        }
+        .form label{
+            width:40px;
+            text-align: justify;
+        }
+        .form input{
+            width:45px;
+            border: none;
+        }
+    </style>
+</block>
+<block name="src">
+    <script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
+    <script type="text/javascript" src="__PUBLIC__/js/Dev/peShowStatus.js"></script>
+</block>
+<block name="main">
+    <div class="easyui-layout" fit="true" style="width: 100%;height: 100%;">
+        <div data-options="region:'west',title:'所有部门',iconCls:'icon-drive'" style="width:20%">
+            <ul id="tree"></ul>
+        </div>
+        <div data-options="region:'center'" style="width:80%">
+            <table id="datagrid"></table>
+            <div id="toolbar">
+                <form id="toolForm">
+                    <label>生产厂家：</label>
+                    <input class="easyui-textbox" name="product"/>
+                    <label>产品序号：</label>
+                    <input class="easyui-textbox" name="cpxh"/>
+                    <label>警员姓名：</label>
+                    <input class="easyui-textbox" name="jyxm" id="jyxm"/>
+                    <a id="searching" class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true">搜索</a>
+                </form>
+            </div>
+            <div id="d1"></div>
+        </div>
+    </div>
+</block>

@@ -1,0 +1,34 @@
+<extend name="layouts:master" />
+<block name="link"></block>
+<block name="src">
+<script type="text/javascript">
+//根部门  用于数据的初始化
+app.tp.areaid = "{:$areaid}";
+app.tp.areaname = "{:$areaname}";
+</script>
+<script type="text/javascript" src="__PUBLIC__/js/Tree.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/Media/assessmeny_sat.js"></script>
+</block>
+<block name="main">
+<div class="easyui-layout" fit="true">
+        <div data-options="region:'west',title:'所有部门',iconCls:'icon-drive',split:false" style="width:20%;background:#eee;">
+            <ul id="area_list"></ul>
+        </div>
+       <div data-options="region:'center',border:false,iconCls:'icon-film'" style="width:60%;background:#eee;">
+           <table id="treegrid" toolbar="#toolbar"></table>
+       </div>
+    </div>
+    <div id="toolbar">
+        <form id="searchForm" method="post" style="margin-top: 3px;" novalidate>
+             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon icon-filter" plain="true" onclick="module.show()">全部</a>&nbsp;&nbsp;&nbsp;
+                姓名: <input id="name"  class="easyui-textbox" data-options="height:22"  style="width:168px"/>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="module.search()">搜索</a>
+        </form>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            data-options="iconCls:'icon icon-drive'" style="float: right;color:#0E5AB9;">
+        当前部门：<span id="mu_ser">无</span></a>
+        <a href="javascript:void(0)" onclick="module.infoBar(1)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a>
+        <a href="javascript:void(0)" onclick="module.infoBar(2)" class="easyui-linkbutton" data-options="iconCls:'icon icon-edit',plain:true">修改</a>
+        <a href="javascript:void(0)" onclick="module.allowAreaBar()" class="easyui-linkbutton" data-options="iconCls:'icon icon-basket_put',plain:true">权限分配</a>
+    </div>
+</block>
